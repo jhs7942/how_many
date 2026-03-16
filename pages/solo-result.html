@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>활동 결과 — 몇명이니</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .result-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding-top: 8px;
+    }
+
+    .confetti-area {
+      text-align: center;
+      padding: 8px 0;
+    }
+
+    .confetti-emoji {
+      font-size: 28px;
+      display: inline-block;
+    }
+
+    .share-row {
+      display: flex;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <a href="solo-spin.html" class="btn-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </a>
+      <span class="page-title">활동 결정!</span>
+    </div>
+
+    <div class="page-content">
+      <div class="result-wrap">
+        <div class="confetti-area" id="confettiArea">
+          🎊 🎉 🎊
+        </div>
+
+        <div class="result-card animate-scale-in" id="resultCard">
+          <span class="result-emoji" id="resultEmoji">🎲</span>
+          <p class="result-label">오늘의 활동은</p>
+          <p class="result-text" id="resultText">--</p>
+        </div>
+
+        <div class="card" style="padding:16px 20px">
+          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;font-weight:600">💡 이런 점이 좋아요</p>
+          <p style="font-size:14px;color:var(--text);line-height:1.6" id="activityTip">결정 완료!</p>
+        </div>
+
+        <div class="btn-stack">
+          <div class="share-row">
+            <button class="btn btn-outline" style="flex:1" id="btnCopy">
+              📋 공유하기
+            </button>
+          </div>
+          <a href="solo-place-spin.html" class="btn btn-secondary btn-full" id="btnPlace">
+            📍 장소도 정할게
+          </a>
+          <a href="solo-spin.html" class="btn btn-primary btn-full">
+            🔄 다시 돌리기
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    const { session, copyToClipboard, showToast } = HowMany;
+
+    const result = session.get('activityResult');
+
+    const ACTIVITY_TIPS = {
+      '카페': '카페인 충전하며 도란도란 이야기 나누기 딱 좋아요 ☕',
+      '산책': '걸으면서 이야기하면 더 솔직해지는 마법이 있어요 🚶',
+      '전시': '새로운 감각을 깨워주는 특별한 경험이 될 거예요 🎨',
+      '영화': '끝나고 이야기꽃 피우는 재미가 있어요 🎬',
+      '노래방': '스트레스 해소에 이만한 게 없죠! 목청껏 불러요 🎤',
+      '술집': '한 잔 하면서 진짜 이야기를 나눠보세요 🍺',
+      '보드게임': '두뇌 싸움과 웃음이 가득한 시간이 될 거예요 🎲',
+      '방탈출': '협동심이 쑥쑥! 탈출 성공하면 더 뿌듯해요 🔐',
+      '볼링': '실력 차이 없이 누구나 즐길 수 있어요 🎳',
+      '고깃집': '고기 앞에서 친해지지 않는 사람은 없어요 🥩',
+    };
+
+    if (result) {
+      document.getElementById('resultEmoji').textContent = result.emoji;
+      document.getElementById('resultText').textContent = result.label;
+      document.getElementById('activityTip').textContent =
+        ACTIVITY_TIPS[result.label] || '즐거운 시간이 될 거예요!';
+    } else {
+      // 결과가 없으면 돌림판으로 이동
+      window.location.href = 'solo-spin.html';
+    }
+
+    // 공유하기
+    document.getElementById('btnCopy').addEventListener('click', () => {
+      const text = result
+        ? `오늘 ${result.label} 어때요? 몇명이니가 골라줬어요! 🎲`
+        : '몇명이니로 오늘 뭐 할지 골라봐요!';
+      copyToClipboard(text);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>인원 선택 — 몇명이니</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .people-section {
+      margin-top: 8px;
+    }
+
+    .section-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .hero-text {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 6px;
+      line-height: 1.35;
+    }
+
+    .hero-text span {
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <a href="../index.html" class="btn-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </a>
+      <span class="page-title">혼자 결정</span>
+    </div>
+
+    <div class="page-content">
+      <div class="people-section">
+        <p class="hero-text">오늘 <span>몇 명</span>이 모이나요?</p>
+        <p class="section-desc">인원에 맞는 활동을 추천해드릴게요</p>
+
+        <div class="people-grid" id="peopleGrid">
+          <!-- JS로 렌더링 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    const PEOPLE_OPTIONS = [
+      { count: 2, emoji: '👫', label: '2명' },
+      { count: 3, emoji: '👨‍👩‍👦', label: '3명' },
+      { count: 4, emoji: '👨‍👩‍👧‍👦', label: '4명' },
+      { count: 5, emoji: '🧑‍🤝‍🧑', label: '5명' },
+      { count: 6, emoji: '👥', label: '6명+' },
+    ];
+
+    const grid = document.getElementById('peopleGrid');
+
+    PEOPLE_OPTIONS.forEach(({ count, emoji, label }) => {
+      const btn = document.createElement('button');
+      btn.className = 'btn-people animate-fade-in';
+      btn.style.animationDelay = `${PEOPLE_OPTIONS.indexOf({ count, emoji, label }) * 0.05}s`;
+      btn.innerHTML = `
+        <span class="people-emoji">${emoji}</span>
+        <span class="people-label">${label}</span>
+      `;
+      btn.addEventListener('click', () => {
+        // 선택 효과
+        document.querySelectorAll('.btn-people').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+
+        // 세션 저장
+        HowMany.session.set('peopleCount', count);
+
+        // 이동
+        setTimeout(() => {
+          window.location.href = 'solo-spin.html';
+        }, 180);
+      });
+      grid.appendChild(btn);
+    });
+  </script>
+</body>
+</html>
