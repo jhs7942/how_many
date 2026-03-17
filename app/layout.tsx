@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import PaletteDevTool from '@/components/PaletteDevTool'; // [TEST]
 
 export const metadata: Metadata = {
   title: "몇명이니 — 모임 결정 서비스",
@@ -27,7 +28,10 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <PaletteDevTool /> {/* [TEST] 색상 팔레트 테스트 기능 */}
+      </body>
     </html>
   );
 }
