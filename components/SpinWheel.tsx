@@ -128,7 +128,8 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(({ segments, onRes
       // 레이블
       ctx.font = `bold ${Math.min(12, SIZE / count * 0.28) * dpr}px Pretendard, sans-serif`;
       ctx.fillStyle = isHighlight ? '#fff' : '#2E2E2E';
-      ctx.fillText(seg.label, 0, 8 * dpr);
+      const maxWidth = (r * 0.7) * dpr;
+      ctx.fillText(seg.label, 0, 8 * dpr, maxWidth);
       ctx.restore();
     });
 

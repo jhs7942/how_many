@@ -19,6 +19,7 @@ export default function GroupResultPage() {
   const { toast, showToast } = useToast();
   const [results, setResults] = useState<VoteResult[]>([]);
   const [winner, setWinner] = useState<VoteResult | null>(null);
+  const [isTie, setIsTie] = useState(false);
   const [animateBars, setAnimateBars] = useState(false);
   const barRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -29,6 +30,7 @@ export default function GroupResultPage() {
 
     const maxVotes = sortedResults[0]?.votes ?? 0;
     const winners = sortedResults.filter(r => r.votes === maxVotes);
+    setIsTie(winners.length > 1);
 
     // 동점 처리: 랜덤 선택
     const finalWinner = winners[Math.floor(Math.random() * winners.length)];
@@ -76,6 +78,11 @@ export default function GroupResultPage() {
           <div style={{ fontSize: 15, opacity: 0.9, marginTop: 8 }}>
             {winner.votes}표 / 전체 {totalVotes}표
           </div>
+          {isTie && (
+            <div style={{ fontSize: 13, opacity: 0.85, marginTop: 8 }}>
+              🎲 동점! 행운의 추첨으로 결정됐어요
+            </div>
+          )}
         </div>
 
         {/* 득표 바 그래프 */}

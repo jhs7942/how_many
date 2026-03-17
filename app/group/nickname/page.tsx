@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import BackButton from '@/components/BackButton';
 import PageLayout from '@/components/PageLayout';
@@ -26,7 +26,10 @@ export default function GroupNicknamePage() {
     router.push('/group/vote');
   };
 
-  const roomCode = session.get<string>('roomCode') ?? '------';
+  const [roomCode, setRoomCode] = useState('------');
+  useEffect(() => {
+    setRoomCode(session.get<string>('roomCode') ?? '------');
+  }, []);
 
   return (
     <PageLayout>
