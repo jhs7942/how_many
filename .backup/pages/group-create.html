@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>투표 방 생성 — 몇명이니</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+
+    .step-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .step-dot.active {
+      background: var(--primary);
+      width: 20px;
+      border-radius: 4px;
+    }
+
+    .people-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .btn-people-mini {
+      padding: 10px 6px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all var(--transition);
+      box-shadow: var(--shadow);
+    }
+
+    .btn-people-mini:active,
+    .btn-people-mini.selected {
+      border-color: var(--primary);
+      background: var(--accent);
+    }
+
+    .btn-people-mini .mini-emoji {
+      font-size: 18px;
+    }
+
+    .candidates-section {
+      margin-top: 4px;
+    }
+
+    .candidate-input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .candidate-input-row input {
+      flex: 1;
+    }
+
+    .candidate-input-row button {
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      white-space: nowrap;
+      transition: all var(--transition);
+    }
+
+    .candidate-input-row button:active {
+      transform: scale(0.95);
+    }
+
+    .candidates-hint {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <a href="../index.html" class="btn-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </a>
+      <span class="page-title">투표 방 만들기</span>
+    </div>
+
+    <div class="page-content">
+      <!-- 스텝 표시 -->
+      <div class="step-indicator">
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+      </div>
+
+      <!-- 인원 선택 -->
+      <div style="margin-bottom:20px">
+        <p class="section-title">👥 몇 명이 함께하나요?</p>
+        <div class="people-mini-grid" id="peopleMiniGrid">
+          <!-- JS로 렌더링 -->
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- 후보 목록 -->
+      <div class="candidates-section" id="candidatesSection" style="display:none">
+        <p class="section-title">🗳️ 투표 후보 <span id="candidateCount" style="color:var(--primary)">0</span> / <span id="candidateMax">5</span>개</p>
+
+        <div class="tags-container" id="tagsContainer">
+          <!-- 태그들이 여기에 렌더링됨 -->
+        </div>
+        <p class="candidates-hint">최소 2개, 최대 5개까지 추가할 수 있어요</p>
+
+        <div class="candidate-input-row">
+          <input
+            class="input-field"
+            id="candidateInput"
+            type="text"
+            placeholder="후보 직접 추가하기"
+            maxlength="10"
+          />
+          <button id="btnAddCandidate">추가</button>
+        </div>
+      </div>
+
+      <div class="btn-stack">
+        <button class="btn btn-primary btn-full" id="btnCreate" disabled>
+          방 만들기 →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    const { ACTIVITY_DATA, session, showToast } = HowMany;
+
+    const PEOPLE_OPTIONS = [
+      { count: 2, emoji: '👫', label: '2명' },
+      { count: 3, emoji: '👨‍👩‍👦', label: '3명' },
+      { count: 4, emoji: '👨‍👩‍👧‍👦', label: '4명' },
+      { count: 5, emoji: '🧑‍🤝‍🧑', label: '5명' },
+      { count: 6, emoji: '👥', label: '6명+' },
+    ];
+
+    let selectedCount = null;
+    let candidates = [];
+    const MAX_CANDIDATES = 5;
+
+    // 인원 그리드 렌더링
+    const peopleMiniGrid = document.getElementById('peopleMiniGrid');
+    PEOPLE_OPTIONS.forEach(({ count, emoji, label }) => {
+      const btn = document.createElement('button');
+      btn.className = 'btn-people-mini';
+      btn.innerHTML = `<span class="mini-emoji">${emoji}</span><span>${label}</span>`;
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.btn-people-mini').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedCount = count;
+        loadCandidates(count);
+      });
+      peopleMiniGrid.appendChild(btn);
+    });
+
+    function loadCandidates(count) {
+      const key = count >= 6 ? 6 : count <= 2 ? 2 : count;
+      const activities = ACTIVITY_DATA[key] || ACTIVITY_DATA[4];
+      candidates = activities.map(a => ({ ...a }));
+      renderTags();
+      document.getElementById('candidatesSection').style.display = 'block';
+    }
+
+    function renderTags() {
+      const container = document.getElementById('tagsContainer');
+      container.innerHTML = '';
+      candidates.forEach((c, i) => {
+        const tag = document.createElement('span');
+        tag.className = 'tag animate-fade-in';
+        tag.innerHTML = `${c.emoji} ${c.label} <span class="tag-remove" data-index="${i}">×</span>`;
+        tag.querySelector('.tag-remove').addEventListener('click', () => {
+          if (candidates.length <= 2) {
+            showToast('최소 2개는 있어야 해요!');
+            return;
+          }
+          candidates.splice(i, 1);
+          renderTags();
+          updateCreateBtn();
+        });
+        container.appendChild(tag);
+      });
+      document.getElementById('candidateCount').textContent = candidates.length;
+      updateCreateBtn();
+    }
+
+    function updateCreateBtn() {
+      const btn = document.getElementById('btnCreate');
+      btn.disabled = !selectedCount || candidates.length < 2;
+    }
+
+    // 후보 추가
+    const input = document.getElementById('candidateInput');
+    document.getElementById('btnAddCandidate').addEventListener('click', addCandidate);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') addCandidate(); });
+
+    function addCandidate() {
+      const val = input.value.trim();
+      if (!val) return;
+      if (candidates.length >= MAX_CANDIDATES) {
+        showToast(`최대 ${MAX_CANDIDATES}개까지만 추가할 수 있어요`);
+        return;
+      }
+      if (candidates.find(c => c.label === val)) {
+        showToast('이미 있는 후보예요!');
+        return;
+      }
+      candidates.push({ label: val, emoji: '🗳️' });
+      input.value = '';
+      renderTags();
+    }
+
+    // 방 만들기
+    document.getElementById('btnCreate').addEventListener('click', () => {
+      const roomCode = HowMany.generateRoomCode();
+      session.set('roomCode', roomCode);
+      session.set('groupCandidates', candidates);
+      session.set('groupPeopleCount', selectedCount);
+      window.location.href = 'group-invite.html';
+    });
+  </script>
+</body>
+</html>

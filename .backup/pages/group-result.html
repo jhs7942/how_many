@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>투표 결과 — 몇명이니</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .winner-card {
+      background: linear-gradient(135deg, var(--primary) 0%, #FFB347 100%);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      text-align: center;
+      color: #fff;
+      box-shadow: 0 8px 32px rgba(255, 122, 61, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .winner-card::before {
+      content: '';
+      position: absolute;
+      top: -30px; right: -30px;
+      width: 100px;
+      height: 100px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 50%;
+    }
+
+    .winner-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.22);
+      padding: 4px 14px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .winner-emoji {
+      font-size: 52px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .winner-title {
+      font-size: 11px;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+
+    .winner-name {
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .winner-votes {
+      font-size: 14px;
+      opacity: 0.85;
+      margin-top: 6px;
+    }
+
+    .tie-notice {
+      background: var(--accent);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--primary-dark);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .result-section {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .random-pick-result {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      animation: scaleIn 0.35s ease;
+    }
+
+    .random-pick-result.show {
+      display: block;
+    }
+
+    .random-pick-emoji {
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+
+    .random-pick-text {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <a href="../index.html" class="btn-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </a>
+      <span class="page-title">투표 결과</span>
+      <span class="badge badge-primary" id="roomCodeBadge">결과</span>
+    </div>
+
+    <div class="page-content">
+      <div class="result-section">
+        <!-- 1위 카드 -->
+        <div class="winner-card" id="winnerCard">
+          <span class="winner-badge">🏆 최다 득표</span>
+          <span class="winner-emoji" id="winnerEmoji">🎲</span>
+          <p class="winner-title">최종 결정</p>
+          <p class="winner-name" id="winnerName">--</p>
+          <p class="winner-votes" id="winnerVotes">-- 표</p>
+        </div>
+
+        <!-- 동점 알림 -->
+        <div class="tie-notice" id="tieNotice" style="display:none">
+          ⚡ 동점이에요! 랜덤으로 최종 결정할 수 있어요
+        </div>
+
+        <!-- 랜덤 결정 결과 -->
+        <div class="random-pick-result" id="randomPickResult">
+          <div class="random-pick-emoji">🎲</div>
+          <p class="random-pick-text" id="randomPickText">--</p>
+        </div>
+
+        <!-- 득표 그래프 -->
+        <div>
+          <p class="section-title">📊 득표 현황</p>
+          <div class="result-bar-list" id="resultBarList">
+            <!-- JS로 렌더링 -->
+          </div>
+        </div>
+
+        <!-- 참여자 수 -->
+        <div class="card" style="padding:14px 18px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:14px;font-weight:700;color:var(--text-secondary)">총 참여자</span>
+            <span style="font-size:18px;font-weight:800;color:var(--primary)" id="totalVoters">--명</span>
+          </div>
+        </div>
+
+        <div class="btn-stack">
+          <button class="btn btn-secondary btn-full" id="btnRandomPick" style="display:none">
+            🎲 동점 랜덤 결정!
+          </button>
+          <button class="btn btn-outline btn-full" id="btnShare">
+            📋 결과 공유하기
+          </button>
+          <a href="../index.html" class="btn btn-primary btn-full">
+            🏠 처음으로
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="../js/main.js"></script>
+  <script>
+    const { session, copyToClipboard, showToast, DUMMY_VOTE_RESULTS } = HowMany;
+
+    const roomCode = session.get('roomCode') || 'DEMO';
+    document.getElementById('roomCodeBadge').textContent = roomCode.slice(0, 3) + '...';
+
+    // 더미 투표 결과 사용
+    const results = [...DUMMY_VOTE_RESULTS].sort((a, b) => b.votes - a.votes);
+    const totalVotes = results.reduce((sum, r) => sum + r.votes, 0);
+
+    document.getElementById('totalVoters').textContent = totalVotes + '명';
+
+    // 1위 찾기
+    const maxVotes = results[0].votes;
+    const winners = results.filter(r => r.votes === maxVotes);
+    const isTie = winners.length > 1;
+
+    // 1위 카드
+    const winner = winners[0];
+    document.getElementById('winnerEmoji').textContent = winner.emoji;
+    document.getElementById('winnerName').textContent = winner.label;
+    document.getElementById('winnerVotes').textContent = `${winner.votes}표 획득`;
+
+    // 동점 처리
+    if (isTie) {
+      document.getElementById('tieNotice').style.display = 'flex';
+      document.getElementById('btnRandomPick').style.display = 'flex';
+
+      document.getElementById('winnerCard').style.background =
+        'linear-gradient(135deg, #7986CB 0%, #9C27B0 100%)';
+      document.getElementById('winnerCard').querySelector('.winner-badge').textContent = '⚡ 동점';
+    }
+
+    // 득표 바 그래프
+    const barList = document.getElementById('resultBarList');
+    results.forEach((r, i) => {
+      const pct = Math.round((r.votes / maxVotes) * 100);
+      const isWinner = r.votes === maxVotes && !isTie;
+
+      const item = document.createElement('div');
+      item.className = 'result-bar-item' + (isWinner ? ' winner' : '');
+      item.innerHTML = `
+        <div class="result-bar-header">
+          <span class="result-bar-label">${r.emoji} ${r.label}</span>
+          <span class="result-bar-count">${r.votes}표</span>
+        </div>
+        <div class="result-bar-track">
+          <div class="result-bar-fill" style="width:0%" data-width="${pct}%"></div>
+        </div>
+      `;
+      barList.appendChild(item);
+    });
+
+    // 바 애니메이션 (0.1초 뒤 시작)
+    setTimeout(() => {
+      document.querySelectorAll('.result-bar-fill').forEach(bar => {
+        bar.style.width = bar.dataset.width;
+      });
+    }, 100);
+
+    // 랜덤 결정 버튼
+    document.getElementById('btnRandomPick').addEventListener('click', () => {
+      const picked = winners[Math.floor(Math.random() * winners.length)];
+      const result = document.getElementById('randomPickResult');
+      document.getElementById('randomPickText').textContent = `🎯 ${picked.emoji} ${picked.label} 당첨!`;
+      result.classList.add('show');
+
+      document.getElementById('winnerEmoji').textContent = picked.emoji;
+      document.getElementById('winnerName').textContent = picked.label;
+      document.getElementById('btnRandomPick').disabled = true;
+
+      showToast(`🎲 ${picked.label}(으)로 결정됐어요!`);
+    });
+
+    // 공유
+    document.getElementById('btnShare').addEventListener('click', () => {
+      const text = `[몇명이니 투표 결과]\n🏆 ${winner.label} ${winner.votes}표로 1위!\n\n오늘 ${winner.label} 어때요? 🎲`;
+      copyToClipboard(text);
+    });
+  </script>
+</body>
+</html>
