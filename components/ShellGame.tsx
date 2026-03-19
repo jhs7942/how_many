@@ -23,17 +23,6 @@ function mulberry32(a: number) {
   };
 }
 
-// seed 기반 Fisher-Yates 셔플
-function seededShuffle<T>(arr: T[], seed: number): T[] {
-  const rng = mulberry32(seed);
-  const result = [...arr];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-}
-
 export default function ShellGame({
   segments,
   seed,
@@ -43,17 +32,18 @@ export default function ShellGame({
   hostChoice,
 }: ShellGameProps) {
   const n = segments.length;
-  // positions[i] = 화면상 위치 인덱스 (어떤 컵이 어느 자리에 있는지)
+  // positions[cupIdx] = 해당 컵의 현재 화면상 위치 인덱스
   const [positions, setPositions] = useState<number[]>(Array.from({ length: n }, (_, i) => i));
   const [gameState, setGameState] = useState<GameState>('idle');
   const [ballIndex, setBallIndex] = useState(0); // 공이 들어있는 컵의 원래 인덱스
-  const [chosenCup, setChosenCup] = useState<number | null>(null);
+  const [chosenScreenPos, setChosenScreenPos] = useState<number | null>(null); // 선택한 화면 위치
   const [revealed, setRevealed] = useState(false);
+  const [shakingCups, setShakingCups] = useState<Set<number>>(new Set());
   const posRef = useRef(positions);
 
   useEffect(() => { posRef.current = positions; }, [positions]);
 
-  // 애니메이션 시작
+  // 게임 자동 시작
   useEffect(() => {
     if (gameState !== 'idle') return;
     startGame();
@@ -77,7 +67,7 @@ export default function ShellGame({
     setGameState('covering');
     await delay(600);
 
-    // 3. shuffling: 셔플 애니메이션
+    // 3. shuffling: 셔플 + 흔들기 애니메이션
     setGameState('shuffling');
     const rng = mulberry32(actualSeed);
     const shuffleCount = 6 + Math.floor(rng() * 4); // 6~9번 스왑
@@ -87,9 +77,14 @@ export default function ShellGame({
       const a = Math.floor(rng() * n);
       let b = Math.floor(rng() * (n - 1));
       if (b >= a) b++;
+
+      // 대상 컵 흔들기 → 위치 교환 → 안정
+      setShakingCups(new Set([a, b]));
+      await delay(80);
       [curr[a], curr[b]] = [curr[b], curr[a]];
       setPositions([...curr]);
-      await delay(350);
+      setShakingCups(new Set());
+      await delay(260);
     }
 
     // 4. choosing
@@ -100,19 +95,26 @@ export default function ShellGame({
     }
   }
 
-  function handleChoose(cupIndex: number, winnerIndex?: number) {
+  function handleChoose(screenPos: number, winnerIndex?: number) {
     if (gameState !== 'choosing') return;
-    setChosenCup(cupIndex);
+    setChosenScreenPos(screenPos);
     setGameState('revealing');
     const winner = winnerIndex ?? ballIndex;
+
+    // 600ms: 컵이 완전히 열린 후 결과 레이블 표시
     setTimeout(() => {
       setRevealed(true);
-      onResult(winner);
     }, 600);
+    // 1800ms: 사용자가 결과를 확인한 뒤 콜백 호출
+    setTimeout(() => {
+      onResult(winner);
+    }, 1800);
   }
 
+  const gap = 12;
   const CUP_W = Math.min(72, Math.floor(360 / n) - 8);
   const CUP_H = CUP_W * 1.2;
+  const containerWidth = n * CUP_W + (n - 1) * gap;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
@@ -126,38 +128,37 @@ export default function ShellGame({
         {gameState === 'revealing' && '두구두구...'}
       </p>
 
-      {/* 컵 영역 */}
+      {/* 컵 영역: 절대 위치 기반으로 부드러운 슬라이드 */}
       <div
         style={{
-          display: 'flex',
-          gap: 8,
-          justifyContent: 'center',
           position: 'relative',
-          height: CUP_H + 40,
-          width: '100%',
+          height: CUP_H + 50,
+          width: containerWidth,
         }}
       >
-        {Array.from({ length: n }, (_, i) => {
-          // 이 위치(i)에 있는 컵의 원래 인덱스
-          const cupOriginalIndex = positions.indexOf(i);
-          const isBall = cupOriginalIndex === ballIndex;
-          const isChosen = chosenCup === i;
+        {Array.from({ length: n }, (_, cupIdx) => {
+          const screenPos = positions[cupIdx]; // 이 컵의 현재 화면 위치
+          const isBall = cupIdx === ballIndex;
+          const isChosen = chosenScreenPos === screenPos;
           const isLifted =
             (gameState === 'showing') ||
             (gameState === 'revealing' && isChosen);
+          const isShaking = shakingCups.has(cupIdx);
 
           return (
             <div
-              key={i}
-              onClick={() => !viewOnly && handleChoose(i)}
+              key={cupIdx}
+              onClick={() => !viewOnly && handleChoose(screenPos)}
               style={{
+                position: 'absolute',
+                left: screenPos * (CUP_W + gap),
+                top: 0,
                 width: CUP_W,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 cursor: gameState === 'choosing' && !viewOnly ? 'pointer' : 'default',
-                transition: 'transform 0.3s',
-                transform: gameState === 'shuffling' ? 'scale(0.95)' : 'scale(1)',
+                transition: 'left 0.25s ease-in-out',
               }}
             >
               {/* 컵 */}
@@ -176,8 +177,10 @@ export default function ShellGame({
                   boxShadow: gameState === 'choosing' && !viewOnly
                     ? 'var(--shadow-lg)'
                     : 'var(--shadow)',
-                  transition: 'transform 0.4s cubic-bezier(.4,2,.6,1), background 0.3s',
-                  transform: isLifted ? `translateY(-${CUP_H * 0.6}px)` : 'translateY(0)',
+                  // 셔플 중: 흔들기 애니메이션, 이외: 위/아래 lift 트랜지션
+                  transform: !isShaking ? (isLifted ? `translateY(-${CUP_H * 0.6}px)` : 'translateY(0)') : undefined,
+                  transition: isShaking ? 'background 0.3s' : 'transform 0.4s cubic-bezier(.4,2,.6,1), background 0.3s',
+                  animation: isShaking ? 'cupShake 0.25s ease-in-out' : 'none',
                   position: 'relative',
                   zIndex: 1,
                 }}
@@ -203,7 +206,7 @@ export default function ShellGame({
               >
                 {isBall && (
                   <span style={{ fontSize: CUP_W * 0.4 }}>
-                    {segments[cupOriginalIndex].emoji}
+                    {segments[cupIdx].emoji}
                   </span>
                 )}
               </div>
@@ -216,7 +219,7 @@ export default function ShellGame({
                   color: isBall ? 'var(--color-primary)' : '#888',
                   marginTop: 4,
                 }}>
-                  {isBall ? segments[cupOriginalIndex].label : '꽝'}
+                  {isBall ? segments[cupIdx].label : '꽝'}
                 </span>
               )}
             </div>
