@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import PaletteDevTool from '@/components/PaletteDevTool'; // [TEST]
+import UrlNormalizer from '@/components/UrlNormalizer';
 
 export const metadata: Metadata = {
   title: "몇명이니 — 모임 결정 서비스",
@@ -29,6 +30,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <UrlNormalizer />
         {children}
         <PaletteDevTool /> {/* [TEST] 색상 팔레트 테스트 기능 */}
       </body>
