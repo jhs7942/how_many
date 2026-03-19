@@ -38,9 +38,12 @@ export default function SoloResultPage() {
 
   const handleShare = async () => {
     if (!activity) return;
-    const url = resultId ? `${window.location.origin}/result/${resultId}` : window.location.href;
-    await copyToClipboard(url);
-    showToast('공유 링크가 복사됐어요! 📋');
+    if (resultId) {
+      router.push(`/result/${resultId}`);
+    } else {
+      await copyToClipboard(window.location.href);
+      showToast('공유 링크가 복사됐어요! 📋');
+    }
   };
 
   const handleMapSearch = (service: 'kakao' | 'naver') => {
@@ -163,6 +166,22 @@ export default function SoloResultPage() {
             }}
           >
             다시 돌리기 🔄
+          </button>
+          <button
+            onClick={() => router.push('/')}
+            style={{
+              width: '100%',
+              padding: '14px',
+              borderRadius: 14,
+              background: 'transparent',
+              color: '#aaa',
+              fontSize: 14,
+              fontWeight: 600,
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            홈으로 돌아가기 🏠
           </button>
         </div>
       </div>

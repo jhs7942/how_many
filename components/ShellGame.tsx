@@ -35,7 +35,6 @@ export default function ShellGame({
   // positions[cupIdx] = 해당 컵의 현재 화면상 위치 인덱스
   const [positions, setPositions] = useState<number[]>(Array.from({ length: n }, (_, i) => i));
   const [gameState, setGameState] = useState<GameState>('idle');
-  const [ballIndex, setBallIndex] = useState(0); // 공이 들어있는 컵의 원래 인덱스
   const [chosenScreenPos, setChosenScreenPos] = useState<number | null>(null); // 선택한 화면 위치
   const [revealed, setRevealed] = useState(false);
   const [shakingCups, setShakingCups] = useState<Set<number>>(new Set());
@@ -55,9 +54,7 @@ export default function ShellGame({
   }
 
   async function startGame() {
-    const actualResult = resultIndex ?? Math.floor(Math.random() * n);
     const actualSeed = seed ?? Math.floor(Math.random() * 2147483647);
-    setBallIndex(actualResult);
 
     // 1. showing: 공 위치 보여주기
     setGameState('showing');
@@ -91,15 +88,15 @@ export default function ShellGame({
     setGameState('choosing');
     if (viewOnly && hostChoice !== undefined) {
       await delay(500);
-      handleChoose(hostChoice, actualResult);
+      handleChoose(hostChoice);
     }
   }
 
-  function handleChoose(screenPos: number, winnerIndex?: number) {
+  function handleChoose(screenPos: number) {
     if (gameState !== 'choosing') return;
+    const cupIdx = positions.indexOf(screenPos);
     setChosenScreenPos(screenPos);
     setGameState('revealing');
-    const winner = winnerIndex ?? ballIndex;
 
     // 600ms: 컵이 완전히 열린 후 결과 레이블 표시
     setTimeout(() => {
@@ -107,7 +104,7 @@ export default function ShellGame({
     }, 600);
     // 1800ms: 사용자가 결과를 확인한 뒤 콜백 호출
     setTimeout(() => {
-      onResult(winner);
+      onResult(cupIdx);
     }, 1800);
   }
 
@@ -138,7 +135,6 @@ export default function ShellGame({
       >
         {Array.from({ length: n }, (_, cupIdx) => {
           const screenPos = positions[cupIdx]; // 이 컵의 현재 화면 위치
-          const isBall = cupIdx === ballIndex;
           const isChosen = chosenScreenPos === screenPos;
           const isLifted =
             (gameState === 'showing') ||
@@ -166,9 +162,7 @@ export default function ShellGame({
                 style={{
                   width: CUP_W,
                   height: CUP_H,
-                  background: isChosen && revealed
-                    ? (isBall ? 'var(--color-primary)' : '#ccc')
-                    : 'var(--color-primary)',
+                  background: 'var(--color-primary)',
                   borderRadius: '8px 8px 14px 14px',
                   display: 'flex',
                   alignItems: 'center',
@@ -188,13 +182,13 @@ export default function ShellGame({
                 🥤
               </div>
 
-              {/* 공 (컵 아래) */}
+              {/* 후보 아이콘 (컵 아래) */}
               <div
                 style={{
                   width: CUP_W * 0.6,
                   height: CUP_W * 0.6,
                   borderRadius: '50%',
-                  background: isBall ? 'var(--color-primary)' : 'transparent',
+                  background: 'var(--color-primary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -204,11 +198,9 @@ export default function ShellGame({
                   opacity: isLifted ? 1 : 0,
                 }}
               >
-                {isBall && (
-                  <span style={{ fontSize: CUP_W * 0.4 }}>
-                    {segments[cupIdx].emoji}
-                  </span>
-                )}
+                <span style={{ fontSize: CUP_W * 0.4 }}>
+                  {segments[cupIdx].emoji}
+                </span>
               </div>
 
               {/* 선택 후 결과 레이블 */}
@@ -216,10 +208,10 @@ export default function ShellGame({
                 <span style={{
                   fontSize: 12,
                   fontWeight: 700,
-                  color: isBall ? 'var(--color-primary)' : '#888',
+                  color: 'var(--color-primary)',
                   marginTop: 4,
                 }}>
-                  {isBall ? segments[cupIdx].label : '꽝'}
+                  {segments[cupIdx].label}
                 </span>
               )}
             </div>
@@ -227,23 +219,25 @@ export default function ShellGame({
         })}
       </div>
 
-      {/* 선택지 레이블 */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {segments.map((s, i) => (
-          <span
-            key={i}
-            style={{
-              padding: '4px 10px',
-              borderRadius: 20,
-              background: 'var(--color-accent)',
-              fontSize: 13,
-              color: 'var(--color-text)',
-            }}
-          >
-            {s.emoji} {s.label}
-          </span>
-        ))}
-      </div>
+      {/* 선택지 레이블 — choosing/revealing 단계에서만 표시 */}
+      {(gameState === 'choosing' || gameState === 'revealing') && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {segments.map((s, i) => (
+            <span
+              key={i}
+              style={{
+                padding: '4px 10px',
+                borderRadius: 20,
+                background: 'var(--color-accent)',
+                fontSize: 13,
+                color: 'var(--color-text)',
+              }}
+            >
+              {s.emoji} {s.label}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

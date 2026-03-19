@@ -43,7 +43,7 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(
       const count = segments.length;
       const arc = (Math.PI * 2) / count;
       const targetMid = -arc * resultIndex - arc / 2;
-      const extraRotation = (5 + Math.random() * 3) * Math.PI * 2;
+      const extraRotation = Math.floor(5 + Math.random() * 4) * Math.PI * 2;
       const targetAngle = targetMid - stateRef.current.currentAngle + extraRotation;
 
       const duration = 3500;

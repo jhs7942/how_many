@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PageLayout from '@/components/PageLayout';
+import BackButton from '@/components/BackButton';
 import SpinWheel, { type SpinWheelHandle } from '@/components/SpinWheel';
 import ShellGame from '@/components/ShellGame';
 import { session } from '@/lib/session';
@@ -69,9 +70,12 @@ export default function SoloRandomPage() {
   return (
     <PageLayout>
       <div style={{ paddingTop: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-text)', textAlign: 'center' }}>
-          {gameType === 'shell' ? '🥤 야바위' : '🎡 돌림판'}
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <BackButton href="/solo/setting" />
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-text)' }}>
+            {gameType === 'shell' ? '🥤 야바위' : '🎡 돌림판'}
+          </h1>
+        </div>
         {location && (
           <p style={{ textAlign: 'center', fontSize: 13, color: '#888', marginTop: 4 }}>
             📍 {location}

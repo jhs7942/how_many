@@ -63,6 +63,7 @@ export default function GroupJoinPage() {
       session.set(failKey, 0);
       session.set('roomId', room.id);
       session.set('roomCode', room.code);
+      session.set('isHost', false);
       router.push('/group/lobby');
     } catch {
       setError('오류가 발생했습니다. 다시 시도해주세요');
