@@ -47,7 +47,7 @@ app/
 
 components/
 ├── SpinWheel.tsx                   # 수정 (seed, enableRespin props 추가)
-├── ShellGame.tsx                   # 신규 (야바위)
+├── ContentShuffle.tsx                   # 신규 (컨텐츠 셔플)
 ├── CandidateEditor.tsx             # 신규 (직접 설정 입력)
 ├── LocationInput.tsx               # 신규 (위치 입력)
 ├── HostDisconnectedModal.tsx       # 신규 (방장 이탈 팝업)
@@ -138,7 +138,7 @@ create table results (
   room_id       uuid references rooms(id) on delete set null,  -- nullable (Solo 공유용)
   winner_label  text not null,
   winner_emoji  text not null,
-  method        text not null,    -- 'vote' | 'spin' | 'shell'
+  method        text not null,    -- 'vote' | 'spin' | 'shuffle'
   is_tie        boolean not null default false,
   vote_summary  jsonb,            -- { candidateId: count, ... }
   location      text,
@@ -151,12 +151,12 @@ create table results (
 create table random_events (
   id               uuid primary key default gen_random_uuid(),
   room_id          uuid references rooms(id) on delete cascade,
-  event_type       text not null,    -- 'spin' | 'shell'
+  event_type       text not null,    -- 'spin' | 'shuffle'
   seed             bigint not null,
   result_index     int not null,
   is_respin        boolean not null default false,
   respin_direction text,             -- 'left' | 'right' | null
-  cup_order        int[]             -- 야바위 컵 순서
+  cup_order        int[]             -- 컨텐츠 셔플 컵 순서
 );
 ```
 
@@ -217,22 +217,23 @@ import { createBrowserClient } from '@supabase/ssr'
 
 ## 7. 컴포넌트 설계
 
-### ShellGame.tsx
+### ContentShuffle.tsx
 ```ts
 // Props
-interface ShellGameProps {
+interface ContentShuffleProps {
   segments: { label: string; emoji: string }[]
   seed?: number
-  resultIndex?: number      // 외부에서 결과 지정 (그룹 동기화)
+  resultIndex?: number      // 외부에서 결과 지정 (그룹 동기화 / 시스템 자동 선택)
   onResult: (index: number) => void
-  viewOnly?: boolean        // 참여자 관람 모드
-  hostChoice?: number       // 방장 선택 결과 (viewOnly일 때)
+  viewOnly?: boolean        // 참여자 관람 모드 (그룹)
 }
 
 // 상태 머신
-// idle → showing(2초) → covering → shuffling → choosing → revealing
-// seed 기반 Fisher-Yates shuffle (mulberry32 PRNG)
+// idle → showing(2초) → covering → shuffling → revealing
+// seed 기반 Fisher-Yates shuffle (mulberry32 PRNG)로 컵 순서 및 결과 결정
 // CSS transform으로 컵 위치 교환 애니메이션
+// 셔플 완료 → 시스템이 resultIndex 컵을 자동으로 열어 결과 공개 (사용자 선택 없음)
+// 꽝 없음: 모든 컵에 컨텐츠 있음
 ```
 
 ### SpinWheel.tsx 수정
@@ -284,7 +285,7 @@ interface SpinWheelProps {
 /solo/location
   → sessionStorage: soloLocation = string | null
 /solo/random
-  → 돌림판/야바위 50:50 자동 선택
+  → 돌림판/컨텐츠 셔플 50:50 자동 선택
   → 결과 후 saveResult() → sessionStorage: soloResultId
 /solo/result
   → /result/[soloResultId] 공유 버튼
@@ -349,9 +350,9 @@ client_id + roomId → getParticipant() → room.status 확인
 
 ---
 
-## 13. 야바위 컵 수 / 야바위 확률
+## 13. 컨텐츠 셔플 컵 수 / 컨텐츠 셔플 확률
 
-| 후보 수 | 야바위 확률 |
+| 후보 수 | 컨텐츠 셔플 확률 |
 |---------|------------|
 | 2~6개 | 50% |
 | 7~8개 | 30% (모바일 화면 공간 부족) |
@@ -387,4 +388,4 @@ npm install @supabase/supabase-js @supabase/ssr
 | 3 | Solo 플로우 (setting → custom/people → location → random → result) |
 | 4 | Group 플로우 (setting → create → join → lobby → vote/vote-status → random → result) |
 | 5 | 홈 수정 + 공유 결과 페이지 + 에지 케이스 (새로고침 복구, 방 만료, 방장 이탈) |
-| 6 | 마무리 (globals.css 야바위 키프레임, sessionStorage 정리, CLAUDE.md 업데이트) |
+| 6 | 마무리 (globals.css 컨텐츠 셔플 키프레임, sessionStorage 정리, CLAUDE.md 업데이트) |

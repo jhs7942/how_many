@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import PageLayout from '@/components/PageLayout';
 import BackButton from '@/components/BackButton';
 import SpinWheel, { type SpinWheelHandle } from '@/components/SpinWheel';
-import ShellGame from '@/components/ShellGame';
+import ContentShuffle from '@/components/ContentShuffle';
 import { session } from '@/lib/session';
 import { saveResult } from '@/lib/api/results';
 import type { Candidate } from '@/components/CandidateEditor';
@@ -16,7 +16,7 @@ export default function SoloRandomPage() {
 
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [location, setLocation] = useState<string | null>(null);
-  const [gameType, setGameType] = useState<'spin' | 'shell' | null>(null);
+  const [gameType, setGameType] = useState<'spin' | 'shuffle' | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -25,9 +25,9 @@ export default function SoloRandomPage() {
     const loc = session.get<string>('soloLocation');
     setCandidates(c);
     setLocation(loc);
-    // 후보 수에 따라 야바위 확률 결정
-    const shellProb = c.length >= 7 ? 0.3 : 0.5;
-    setGameType(Math.random() < shellProb ? 'shell' : 'spin');
+    // 후보 수에 따라 컨텐츠 셔플 확률 결정
+    const shuffleProb = c.length >= 7 ? 0.3 : 0.5;
+    setGameType(Math.random() < shuffleProb ? 'shuffle' : 'spin');
   }, []);
 
   async function handleResult(winner: Candidate) {
@@ -39,7 +39,7 @@ export default function SoloRandomPage() {
         room_id: null,
         winner_label: winner.label,
         winner_emoji: winner.emoji,
-        method: gameType === 'shell' ? 'shell' : 'spin',
+        method: gameType === 'shuffle' ? 'shuffle' : 'spin',
         is_tie: false,
         vote_summary: null,
         location: location,
@@ -73,7 +73,7 @@ export default function SoloRandomPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <BackButton href="/solo/setting" />
           <h1 style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-text)' }}>
-            {gameType === 'shell' ? '🥤 야바위' : '🎡 돌림판'}
+            {gameType === 'shuffle' ? '🔀 컨텐츠 셔플' : '🎡 돌림판'}
           </h1>
         </div>
         {location && (
@@ -112,7 +112,7 @@ export default function SoloRandomPage() {
             </button>
           </>
         ) : (
-          <ShellGame
+          <ContentShuffle
             segments={candidates}
             onResult={(index) => handleResult(candidates[index])}
           />

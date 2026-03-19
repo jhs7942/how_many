@@ -4,14 +4,14 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PageLayout from '@/components/PageLayout';
 import SpinWheel, { type SpinWheelHandle } from '@/components/SpinWheel';
-import ShellGame from '@/components/ShellGame';
+import ContentShuffle from '@/components/ContentShuffle';
 import { session } from '@/lib/session';
 import { getClientId } from '@/lib/clientId';
 import { getRoomById, getRoomCandidates, getParticipant, updateRoomStatus } from '@/lib/api/rooms';
 import { createRandomEvent } from '@/lib/api/random';
 import { saveResult } from '@/lib/api/results';
 import { useRandomEvent } from '@/lib/hooks/useRandomEvent';
-import type { RoomCandidate } from '@/lib/types';
+import type { RoomCandidate, RandomEvent } from '@/lib/types';
 
 export default function GroupRandomPage() {
   const router = useRouter();
@@ -20,10 +20,13 @@ export default function GroupRandomPage() {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<RoomCandidate[]>([]);
   const [isHost, setIsHost] = useState(false);
-  const [gameType, setGameType] = useState<'spin' | 'shell' | null>(null);
+  const [gameType, setGameType] = useState<'spin' | 'shuffle' | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [done, setDone] = useState(false);
   const doneRef = useRef(false);
+
+  // 참여자용: 수신된 이벤트로 ContentShuffle 표시
+  const [participantEvent, setParticipantEvent] = useState<RandomEvent | null>(null);
 
   const randomEvent = useRandomEvent(roomId);
 
@@ -48,8 +51,8 @@ export default function GroupRandomPage() {
 
       // 호스트만 게임 타입 결정
       if (host) {
-        const shellProb = cands.length >= 7 ? 0.3 : 0.5;
-        setGameType(Math.random() < shellProb ? 'shell' : 'spin');
+        const shuffleProb = cands.length >= 7 ? 0.3 : 0.5;
+        setGameType(Math.random() < shuffleProb ? 'shuffle' : 'spin');
       }
     }
     init();
@@ -59,11 +62,17 @@ export default function GroupRandomPage() {
   useEffect(() => {
     if (!randomEvent || isHost || doneRef.current) return;
     setGameType(randomEvent.event_type);
-    // 이미 완료된 이벤트이면 바로 결과 이동
-    if (randomEvent.result_index >= 0) {
-      doneRef.current = true;
-      session.set('groupResultEvent', randomEvent);
-      router.push('/group/result');
+
+    if (randomEvent.event_type === 'shuffle') {
+      // 컨텐츠 셔플: 참여자도 같은 결과로 애니메이션 관람
+      setParticipantEvent(randomEvent);
+    } else {
+      // 돌림판: 바로 결과 화면으로 이동
+      if (randomEvent.result_index >= 0) {
+        doneRef.current = true;
+        session.set('groupResultEvent', randomEvent);
+        router.push('/group/result');
+      }
     }
   }, [randomEvent, isHost, router]);
 
@@ -90,6 +99,13 @@ export default function GroupRandomPage() {
     }
   }
 
+  function handleParticipantResult() {
+    if (doneRef.current || !randomEvent) return;
+    doneRef.current = true;
+    session.set('groupResultEvent', randomEvent);
+    router.push('/group/result');
+  }
+
   function handleSpin() {
     if (isSpinning || done) return;
     setIsSpinning(true);
@@ -111,11 +127,23 @@ export default function GroupRandomPage() {
     );
   }
 
+  // 참여자: 컨텐츠 셔플 이벤트 수신 → 애니메이션 관람
+  if (!isHost && gameType === 'shuffle' && !participantEvent) {
+    return (
+      <PageLayout>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+          <div style={{ fontSize: 32 }}>⏳</div>
+          <p style={{ fontSize: 14, color: '#888' }}>방장이 진행 중이에요</p>
+        </div>
+      </PageLayout>
+    );
+  }
+
   return (
     <PageLayout>
       <div style={{ paddingTop: 24 }}>
         <h1 style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-text)', textAlign: 'center' }}>
-          {gameType === 'shell' ? '🥤 야바위' : '🎡 돌림판'}
+          {gameType === 'shuffle' ? '🔀 컨텐츠 셔플' : '🎡 돌림판'}
         </h1>
         {!isHost && (
           <p style={{ textAlign: 'center', fontSize: 13, color: '#888', marginTop: 4 }}>
@@ -155,17 +183,20 @@ export default function GroupRandomPage() {
               </button>
             )}
           </>
+        ) : isHost ? (
+          // 호스트: 자동 실행, 결과 후 DB 저장
+          <ContentShuffle
+            segments={segments}
+            onResult={(index) => handleHostResult(candidates[index], index)}
+          />
         ) : (
-          isHost ? (
-            <ShellGame
-              segments={segments}
-              onResult={(index) => handleHostResult(candidates[index], index)}
-            />
-          ) : (
-            <div style={{ textAlign: 'center', fontSize: 14, color: '#888' }}>
-              🥤 야바위 진행 중...
-            </div>
-          )
+          // 참여자: 수신된 seed + resultIndex로 동일 결과 관람
+          <ContentShuffle
+            segments={segments}
+            seed={participantEvent!.seed}
+            resultIndex={participantEvent!.result_index}
+            onResult={handleParticipantResult}
+          />
         )}
       </div>
     </PageLayout>
