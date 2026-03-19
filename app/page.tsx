@@ -5,17 +5,17 @@ import Link from 'next/link';
 import { session } from '@/lib/session';
 
 export default function HomePage() {
-  const [splashVisible, setSplashVisible] = useState(true);
+  const [splashVisible, setSplashVisible] = useState(false);
   const [splashHide, setSplashHide] = useState(false);
   const [homeVisible, setHomeVisible] = useState(false);
 
   useEffect(() => {
     const seen = session.get<boolean>('splashSeen');
     if (seen) {
-      setSplashVisible(false);
       setHomeVisible(true);
       return;
     }
+    setSplashVisible(true);
     const timer = setTimeout(() => {
       setSplashHide(true);
       setTimeout(() => {
