@@ -147,7 +147,7 @@ export default function GroupRandomPage() {
         </h1>
         {!isHost && (
           <p style={{ textAlign: 'center', fontSize: 13, color: '#888', marginTop: 4 }}>
-            방장이 진행 중이에요
+            방장이 컵을 고르는 중이에요
           </p>
         )}
       </div>

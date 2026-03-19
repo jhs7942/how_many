@@ -9,7 +9,7 @@ interface ContentShuffleProps {
   onResult: (index: number) => void;
 }
 
-type GameState = 'idle' | 'showing' | 'covering' | 'shuffling' | 'revealing';
+type GameState = 'idle' | 'showing' | 'covering' | 'shuffling' | 'choosing' | 'revealing';
 
 // mulberry32 PRNG
 function mulberry32(a: number) {
@@ -79,14 +79,27 @@ export default function ContentShuffle({
       await delay(260);
     }
 
-    // 4. revealing: 시스템이 자동으로 결과 선택 후 공개 (꽝 없음)
-    const winnerCupIdx = resultIndex !== undefined ? resultIndex : Math.floor(rng() * n);
-    const screenPos = posRef.current[winnerCupIdx];
+    // 4. choosing 또는 자동 공개
+    if (resultIndex !== undefined) {
+      // 참여자 관람 모드: resultIndex로 자동 공개
+      const screenPos = posRef.current[resultIndex];
+      setWinnerScreenPos(screenPos);
+      setGameState('revealing');
+      setTimeout(() => setRevealed(true), 600);
+      setTimeout(() => onResult(resultIndex), 1800);
+    } else {
+      // 사용자가 직접 선택
+      setGameState('choosing');
+    }
+  }
+
+  function handleChoose(screenPos: number) {
+    if (gameState !== 'choosing') return;
+    const cupIdx = posRef.current.indexOf(screenPos);
     setWinnerScreenPos(screenPos);
     setGameState('revealing');
-
     setTimeout(() => setRevealed(true), 600);
-    setTimeout(() => onResult(winnerCupIdx), 1800);
+    setTimeout(() => onResult(cupIdx), 1800);
   }
 
   const gap = 12;
@@ -101,6 +114,7 @@ export default function ContentShuffle({
         {gameState === 'showing' && '👀 위치를 잘 기억하세요!'}
         {gameState === 'covering' && '컵을 덮습니다...'}
         {gameState === 'shuffling' && '🔀 섞는 중...'}
+        {gameState === 'choosing' && '🫵 어느 컵일까요?'}
         {gameState === 'revealing' && '두구두구...'}
       </p>
 
@@ -123,6 +137,7 @@ export default function ContentShuffle({
           return (
             <div
               key={cupIdx}
+              onClick={() => handleChoose(screenPos)}
               style={{
                 position: 'absolute',
                 left: screenPos * (CUP_W + gap),
@@ -131,6 +146,7 @@ export default function ContentShuffle({
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
+                cursor: gameState === 'choosing' ? 'pointer' : 'default',
                 transition: 'left 0.25s ease-in-out',
               }}
             >
@@ -145,7 +161,7 @@ export default function ContentShuffle({
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: CUP_W * 0.45,
-                  boxShadow: 'var(--shadow)',
+                  boxShadow: gameState === 'choosing' ? 'var(--shadow-lg)' : 'var(--shadow)',
                   transform: !isShaking ? (isLifted ? `translateY(-${CUP_H * 0.6}px)` : 'translateY(0)') : undefined,
                   transition: isShaking ? 'background 0.3s' : 'transform 0.4s cubic-bezier(.4,2,.6,1), background 0.3s',
                   animation: isShaking ? 'cupShake 0.25s ease-in-out' : 'none',
