@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import BackButton from '@/components/BackButton';
 import PageLayout from '@/components/PageLayout';
 import { session } from '@/lib/session';
+import { ACTIVITY_DATA } from '@/lib/data';
 
 const PEOPLE_OPTIONS = [
   { count: 2, emoji: '👫', label: '2명' },
@@ -18,14 +19,16 @@ export default function SoloPeoplePage() {
 
   const handleSelect = (count: number) => {
     session.set('people', count);
-    router.push('/solo/spin');
+    const activities = ACTIVITY_DATA[count] ?? [];
+    session.set('soloCandidates', activities);
+    router.push('/solo/location');
   };
 
   return (
     <PageLayout>
       {/* 헤더 */}
       <div style={{ display: 'flex', alignItems: 'center', padding: '16px 0', gap: 12, minHeight: 56 }}>
-        <BackButton href="/" />
+        <BackButton href="/solo/setting" />
         <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>인원 선택</span>
       </div>
 

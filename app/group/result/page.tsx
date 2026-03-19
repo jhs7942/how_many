@@ -1,65 +1,78 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PageLayout from '@/components/PageLayout';
 import Toast, { useToast } from '@/components/Toast';
 import { session } from '@/lib/session';
-import { DUMMY_VOTE_RESULTS } from '@/lib/data';
 import { copyToClipboard } from '@/lib/utils';
-
-interface VoteResult {
-  label: string;
-  emoji: string;
-  votes: number;
-}
+import { getResultByRoomId } from '@/lib/api/results';
+import { getRoomCandidates } from '@/lib/api/rooms';
+import type { Result, RoomCandidate } from '@/lib/types';
 
 export default function GroupResultPage() {
   const router = useRouter();
   const { toast, showToast } = useToast();
-  const [results, setResults] = useState<VoteResult[]>([]);
-  const [winner, setWinner] = useState<VoteResult | null>(null);
-  const [isTie, setIsTie] = useState(false);
+  const [result, setResult] = useState<Result | null>(null);
+  const [candidates, setCandidates] = useState<RoomCandidate[]>([]);
   const [animateBars, setAnimateBars] = useState(false);
-  const barRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    // 더미 결과 사용 (실제에선 서버에서 집계)
-    const sortedResults = [...DUMMY_VOTE_RESULTS].sort((a, b) => b.votes - a.votes);
-    setResults(sortedResults);
+    async function init() {
+      const roomId = session.get<string>('roomId');
+      if (!roomId) { router.replace('/'); return; }
 
-    const maxVotes = sortedResults[0]?.votes ?? 0;
-    const winners = sortedResults.filter(r => r.votes === maxVotes);
-    setIsTie(winners.length > 1);
+      const [res, cands] = await Promise.all([
+        getResultByRoomId(roomId),
+        getRoomCandidates(roomId),
+      ]);
 
-    // 동점 처리: 랜덤 선택
-    const finalWinner = winners[Math.floor(Math.random() * winners.length)];
-    setWinner(finalWinner);
+      if (!res) {
+        // 아직 결과가 없으면 잠시 후 재시도
+        setTimeout(init, 1500);
+        return;
+      }
+      setResult(res);
+      setCandidates(cands);
+      setTimeout(() => setAnimateBars(true), 200);
+    }
+    init();
+  }, [router]);
 
-    setTimeout(() => setAnimateBars(true), 200);
-  }, []);
+  async function handleShare() {
+    if (!result) return;
+    const url = `${window.location.origin}/result/${result.id}`;
+    await copyToClipboard(url);
+    showToast('공유 링크가 복사됐어요! 📤');
+  }
 
-  const totalVotes = results.reduce((sum, r) => sum + r.votes, 0);
-
-  const handleShare = async () => {
-    if (!winner) return;
-    await copyToClipboard(
-      `[몇명이니] 투표 결과: "${winner.label}" ${winner.emoji}이(가) 선택됐어요!`
+  if (!result) {
+    return (
+      <PageLayout>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+          <div style={{ fontSize: 32 }}>⏳</div>
+          <p style={{ fontSize: 14, color: '#888' }}>결과 집계 중...</p>
+        </div>
+      </PageLayout>
     );
-    showToast('결과가 복사되었어요! 📤');
-  };
+  }
 
-  if (!winner) return null;
+  // 투표 방식일 때 득표 현황 계산
+  const voteSummary = result.vote_summary ?? {};
+  const totalVotes = Object.values(voteSummary).reduce((s, v) => s + v, 0);
+  const rankedCandidates = [...candidates].sort((a, b) =>
+    (voteSummary[b.id] ?? 0) - (voteSummary[a.id] ?? 0)
+  );
 
   return (
     <PageLayout>
-      {/* 헤더 */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '16px 0', gap: 12, minHeight: 56 }}>
-        <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>🎉 투표 결과</span>
+      <div style={{ paddingTop: 16 }}>
+        <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>
+          🎉 {result.method === 'vote' ? '투표 결과' : '랜덤 결과'}
+        </span>
       </div>
 
-      {/* 콘텐츠 */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16, overflowY: 'auto' }}>
         {/* 위너 카드 */}
         <div
           style={{
@@ -72,78 +85,74 @@ export default function GroupResultPage() {
             animation: 'scaleIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards',
           }}
         >
-          <span style={{ fontSize: 56, marginBottom: 12, display: 'block' }}>{winner.emoji}</span>
-          <div style={{ fontSize: 14, opacity: 0.85, marginBottom: 6 }}>최다 득표</div>
-          <div style={{ fontSize: 28, fontWeight: 800 }}>{winner.label}</div>
-          <div style={{ fontSize: 15, opacity: 0.9, marginTop: 8 }}>
-            {winner.votes}표 / 전체 {totalVotes}표
+          <span style={{ fontSize: 56, marginBottom: 12, display: 'block' }}>
+            {result.winner_emoji}
+          </span>
+          <div style={{ fontSize: 14, opacity: 0.85, marginBottom: 6 }}>
+            {result.method === 'vote' ? '최다 득표' : result.method === 'spin' ? '돌림판 결과' : '야바위 결과'}
           </div>
-          {isTie && (
+          <div style={{ fontSize: 28, fontWeight: 800 }}>{result.winner_label}</div>
+          {result.method === 'vote' && (
+            <div style={{ fontSize: 15, opacity: 0.9, marginTop: 8 }}>
+              {voteSummary[candidates.find(c => c.label === result.winner_label)?.id ?? ''] ?? 0}표 / 전체 {totalVotes}표
+            </div>
+          )}
+          {result.is_tie && (
             <div style={{ fontSize: 13, opacity: 0.85, marginTop: 8 }}>
               🎲 동점! 행운의 추첨으로 결정됐어요
             </div>
           )}
         </div>
 
-        {/* 득표 바 그래프 */}
-        <div
-          style={{
-            background: 'var(--color-bg-card)',
-            borderRadius: 16,
-            padding: '20px',
-            boxShadow: 'var(--shadow-DEFAULT)',
-          }}
-        >
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-secondary)', marginBottom: 16 }}>
-            📊 전체 득표 현황
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {results.map((result, i) => {
-              const percent = totalVotes > 0 ? (result.votes / totalVotes) * 100 : 0;
-              const isWinner = result.label === winner.label;
-              return (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-text)' }}>
-                      {isWinner && '🥇 '}{result.emoji} {result.label}
-                    </span>
-                    <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 600 }}>
-                      {result.votes}표
-                    </span>
+        {/* 투표 방식일 때 바 그래프 */}
+        {result.method === 'vote' && rankedCandidates.length > 0 && (
+          <div style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: 'var(--shadow)' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#888', marginBottom: 16 }}>📊 전체 득표 현황</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {rankedCandidates.map((c, i) => {
+                const votes = voteSummary[c.id] ?? 0;
+                const percent = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
+                const isWinner = c.label === result.winner_label;
+                return (
+                  <div key={c.id}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)' }}>
+                        {isWinner && '🥇 '}{c.emoji} {c.label}
+                      </span>
+                      <span style={{ fontSize: 13, color: '#888' }}>{votes}표</span>
+                    </div>
+                    <div style={{ height: 10, background: '#eee', borderRadius: 5, overflow: 'hidden' }}>
+                      <div
+                        style={{
+                          height: '100%',
+                          background: isWinner ? 'var(--color-primary)' : 'var(--color-accent)',
+                          borderRadius: 5,
+                          width: animateBars ? `${percent}%` : '0%',
+                          transition: `width 0.8s ease ${i * 0.1}s`,
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div style={{ height: 12, background: 'var(--color-border)', borderRadius: 9999, overflow: 'hidden' }}>
-                    <div
-                      style={{
-                        height: '100%',
-                        borderRadius: 9999,
-                        background: isWinner
-                          ? 'linear-gradient(90deg, var(--color-primary) 0%, #FFB347 100%)'
-                          : 'var(--color-primary)',
-                        width: animateBars ? `${percent}%` : '0%',
-                        transition: 'width 0.8s cubic-bezier(0.4,0,0.2,1)',
-                        transitionDelay: `${i * 0.1}s`,
-                      }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* 버튼 영역 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 'auto', paddingTop: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingBottom: 8 }}>
           <button
             onClick={handleShare}
             style={{
               width: '100%',
-              padding: '16px 24px',
-              borderRadius: 9999,
+              padding: '15px',
+              borderRadius: 14,
+              border: 'none',
               background: 'var(--color-primary)',
               color: '#fff',
+              fontWeight: 800,
               fontSize: 16,
-              fontWeight: 700,
-              boxShadow: '0 4px 16px rgba(255,122,61,0.35)',
+              cursor: 'pointer',
+              boxShadow: 'var(--shadow-lg)',
             }}
           >
             결과 공유하기 📤
@@ -152,12 +161,14 @@ export default function GroupResultPage() {
             onClick={() => router.push('/')}
             style={{
               width: '100%',
-              padding: '14px 24px',
-              borderRadius: 9999,
+              padding: '14px',
+              borderRadius: 14,
+              border: 'none',
               background: 'transparent',
-              color: 'var(--color-text-secondary)',
-              fontSize: 15,
+              color: '#888',
               fontWeight: 600,
+              fontSize: 15,
+              cursor: 'pointer',
             }}
           >
             처음으로 돌아가기 🏠

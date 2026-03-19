@@ -101,77 +101,77 @@ export default function HomePage() {
               혼자도, 같이도 빠르게 결정해요.
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* 혼자 결정 */}
               <Link
-                href="/solo/people"
+                href="/solo/setting"
                 style={{
-                  background: 'var(--color-bg-card)',
-                  borderRadius: 16,
-                  padding: '24px 16px',
+                  background: '#fff',
+                  borderRadius: 18,
+                  padding: '20px 20px',
                   display: 'flex',
-                  flexDirection: 'column',
                   alignItems: 'center',
-                  gap: 12,
-                  boxShadow: 'var(--shadow-DEFAULT)',
-                  border: '2px solid transparent',
-                  cursor: 'pointer',
+                  gap: 16,
+                  boxShadow: 'var(--shadow)',
+                  border: '2px solid var(--color-border)',
                   textDecoration: 'none',
-                  transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)',
-                }}
-                onMouseEnter={e => {
-                  const el = e.currentTarget;
-                  el.style.borderColor = 'var(--color-primary)';
-                  el.style.background = 'var(--color-accent)';
-                  el.style.transform = 'translateY(-3px)';
-                }}
-                onMouseLeave={e => {
-                  const el = e.currentTarget;
-                  el.style.borderColor = 'transparent';
-                  el.style.background = 'var(--color-bg-card)';
-                  el.style.transform = 'translateY(0)';
                 }}
               >
                 <span style={{ fontSize: 40 }}>🙋</span>
-                <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-text)' }}>혼자 결정</span>
-                <span style={{ fontSize: 12, color: 'var(--color-text-secondary)', textAlign: 'center', lineHeight: 1.4 }}>
-                  내가 대표로<br />빠르게 정할게
-                </span>
+                <div>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-text)', marginBottom: 2 }}>
+                    혼자 결정
+                  </div>
+                  <div style={{ fontSize: 13, color: '#888' }}>내가 대표로 빠르게 정할게</div>
+                </div>
               </Link>
 
+              {/* 같이 결정 */}
               <Link
-                href="/group/create"
+                href="/group/setting"
                 style={{
-                  background: 'var(--color-bg-card)',
-                  borderRadius: 16,
-                  padding: '24px 16px',
+                  background: '#fff',
+                  borderRadius: 18,
+                  padding: '20px 20px',
                   display: 'flex',
-                  flexDirection: 'column',
                   alignItems: 'center',
-                  gap: 12,
-                  boxShadow: 'var(--shadow-DEFAULT)',
-                  border: '2px solid transparent',
-                  cursor: 'pointer',
+                  gap: 16,
+                  boxShadow: 'var(--shadow)',
+                  border: '2px solid var(--color-border)',
                   textDecoration: 'none',
-                  transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)',
-                }}
-                onMouseEnter={e => {
-                  const el = e.currentTarget;
-                  el.style.borderColor = 'var(--color-primary)';
-                  el.style.background = 'var(--color-accent)';
-                  el.style.transform = 'translateY(-3px)';
-                }}
-                onMouseLeave={e => {
-                  const el = e.currentTarget;
-                  el.style.borderColor = 'transparent';
-                  el.style.background = 'var(--color-bg-card)';
-                  el.style.transform = 'translateY(0)';
                 }}
               >
                 <span style={{ fontSize: 40 }}>👥</span>
-                <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-text)' }}>같이 결정</span>
-                <span style={{ fontSize: 12, color: 'var(--color-text-secondary)', textAlign: 'center', lineHeight: 1.4 }}>
-                  모두가 참여하는<br />공정한 투표
-                </span>
+                <div>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-text)', marginBottom: 2 }}>
+                    같이 결정
+                  </div>
+                  <div style={{ fontSize: 13, color: '#888' }}>모두가 참여하는 공정한 결정</div>
+                </div>
+              </Link>
+
+              {/* 참여하기 */}
+              <Link
+                href="/group/join"
+                style={{
+                  background: 'var(--color-accent)',
+                  borderRadius: 18,
+                  padding: '20px 20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
+                  boxShadow: 'var(--shadow)',
+                  border: '2px solid var(--color-border)',
+                  textDecoration: 'none',
+                }}
+              >
+                <span style={{ fontSize: 40 }}>🔑</span>
+                <div>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-text)', marginBottom: 2 }}>
+                    참여하기
+                  </div>
+                  <div style={{ fontSize: 13, color: '#888' }}>친구 방에 코드로 입장</div>
+                </div>
               </Link>
             </div>
           </div>

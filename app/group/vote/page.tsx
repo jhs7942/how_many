@@ -1,175 +1,162 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import BackButton from '@/components/BackButton';
 import PageLayout from '@/components/PageLayout';
 import Toast, { useToast } from '@/components/Toast';
 import { session } from '@/lib/session';
+import { getClientId } from '@/lib/clientId';
+import {
+  getRoomCandidates,
+  getParticipant,
+  updateLastSeen,
+} from '@/lib/api/rooms';
+import { castVote, getMyVote } from '@/lib/api/votes';
+import type { RoomCandidate } from '@/lib/types';
 
 export default function GroupVotePage() {
   const router = useRouter();
   const { toast, showToast } = useToast();
-  const [candidates, setCandidates] = useState<{ label: string; emoji: string }[]>([]);
-  const [selected, setSelected] = useState<number | null>(null);
+
+  const [roomId, setRoomId] = useState<string | null>(null);
+  const [candidates, setCandidates] = useState<RoomCandidate[]>([]);
+  const [selected, setSelected] = useState<string | null>(null); // candidateId
   const [voted, setVoted] = useState(false);
-  const [nickname, setNickname] = useState('');
-  const [myEmoji, setMyEmoji] = useState('🐯');
+  const [myParticipant, setMyParticipant] = useState<{ id: string; nickname: string; emoji: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const lastSeenTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    const cands = session.get<{ label: string; emoji: string }[]>('candidates');
-    const nick = session.get<string>('myNickname');
-    const emoji = session.get<string>('myEmoji');
-    if (!cands) {
-      router.replace('/group/create');
-      return;
-    }
-    setCandidates(cands);
-    setNickname(nick ?? '');
-    setMyEmoji(emoji ?? '🐯');
+    async function init() {
+      const id = session.get<string>('roomId');
+      if (!id) { router.replace('/'); return; }
+      setRoomId(id);
 
-    // 이미 투표했는지 확인
-    const alreadyVoted = session.get<boolean>('hasVoted');
-    if (alreadyVoted) {
-      setVoted(true);
+      const clientId = getClientId();
+      const [cands, participant] = await Promise.all([
+        getRoomCandidates(id),
+        getParticipant(id, clientId),
+      ]);
+
+      if (!participant) { router.replace('/group/lobby'); return; }
+      setCandidates(cands);
+      setMyParticipant(participant);
+
+      // 이미 투표했는지 확인
+      const existing = await getMyVote(id, participant.id);
+      if (existing) {
+        setSelected(existing.candidate_id);
+        setVoted(true);
+        setTimeout(() => router.push('/group/vote-status'), 500);
+      }
     }
+    init();
   }, [router]);
 
-  const handleVote = () => {
-    if (selected === null) {
+  // last_seen 업데이트
+  useEffect(() => {
+    if (!myParticipant) return;
+    const update = () => updateLastSeen(myParticipant.id);
+    update();
+    lastSeenTimerRef.current = setInterval(update, 10000);
+    return () => { if (lastSeenTimerRef.current) clearInterval(lastSeenTimerRef.current); };
+  }, [myParticipant]);
+
+  async function handleVote() {
+    if (!selected || !myParticipant || !roomId) {
       showToast('투표할 항목을 선택해주세요');
       return;
     }
-    session.set('myVote', candidates[selected]);
-    session.set('hasVoted', true);
-    setVoted(true);
-    showToast('투표가 완료되었어요! 🗳️');
-    setTimeout(() => router.push('/group/wait'), 1000);
-  };
+    setLoading(true);
+    try {
+      await castVote(roomId, myParticipant.id, selected);
+      setVoted(true);
+      showToast('투표 완료! 🗳️');
+      setTimeout(() => router.push('/group/vote-status'), 1000);
+    } catch {
+      showToast('투표에 실패했습니다');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <PageLayout>
-      {/* 헤더 */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '16px 0', gap: 12, minHeight: 56 }}>
-        <BackButton href="/group/nickname" />
-        <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>투표하기</span>
-      </div>
-
-      {/* 스텝 표시 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>
-        {[1, 2, 3, 4].map(step => (
-          <div
-            key={step}
-            style={{
-              width: step === 4 ? 20 : 8,
-              height: 8,
-              borderRadius: step === 4 ? 4 : '50%',
-              background: 'var(--color-primary)',
-            }}
-          />
-        ))}
-      </div>
-
-      {/* 콘텐츠 */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 20 }}>
-        {/* 내 정보 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 28 }}>{myEmoji}</span>
-          <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)' }}>
-              {nickname || '익명'}님의 투표
-            </div>
-            <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-              하나를 선택해주세요 (비공개)
-            </div>
-          </div>
-        </div>
-
-        {/* 투표 목록 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {candidates.map((candidate, i) => (
-            <button
-              key={i}
-              onClick={() => !voted && setSelected(i)}
-              disabled={voted}
-              style={{
-                background: selected === i ? 'var(--color-accent)' : 'var(--color-bg-card)',
-                border: `2px solid ${selected === i ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                borderRadius: 16,
-                padding: '16px 20px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 14,
-                cursor: voted ? 'default' : 'pointer',
-                transition: 'all 0.25s',
-                boxShadow: 'var(--shadow-DEFAULT)',
-                opacity: voted && selected !== i ? 0.6 : 1,
-              }}
-            >
-              <span style={{ fontSize: 28, flexShrink: 0 }}>{candidate.emoji}</span>
-              <span style={{ fontSize: 17, fontWeight: 700, flex: 1, textAlign: 'left', color: 'var(--color-text)' }}>
-                {candidate.label}
-              </span>
-              <div
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: '50%',
-                  border: `2px solid ${selected === i ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                  background: selected === i ? 'var(--color-primary)' : 'transparent',
-                  flexShrink: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {selected === i && (
-                  <svg width="12" height="9" viewBox="0 0 12 9" fill="none">
-                    <path d="M1 4L4.5 7.5L11 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-              </div>
-            </button>
-          ))}
-        </div>
-
-        {voted && (
-          <div
-            style={{
-              background: 'rgba(76,175,80,0.1)',
-              borderRadius: 16,
-              padding: '14px 20px',
-              textAlign: 'center',
-              color: 'var(--color-success)',
-              fontWeight: 700,
-              fontSize: 15,
-            }}
-          >
-            ✅ 투표 완료! 다른 친구들을 기다리는 중...
-          </div>
+      <div style={{ paddingTop: 16 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-text)' }}>투표하기</h1>
+        {myParticipant && (
+          <p style={{ fontSize: 14, color: '#888', marginTop: 4 }}>
+            {myParticipant.emoji} {myParticipant.nickname}님, 하나를 선택해주세요 (비공개)
+          </p>
         )}
       </div>
 
-      {/* 투표 버튼 */}
-      {!voted && (
-        <div style={{ paddingTop: 24 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 20, overflowY: 'auto' }}>
+        {candidates.map((c) => (
           <button
-            onClick={handleVote}
+            key={c.id}
+            onClick={() => !voted && setSelected(c.id)}
+            disabled={voted}
             style={{
-              width: '100%',
-              padding: '18px 28px',
-              borderRadius: 9999,
-              background: selected !== null ? 'var(--color-primary)' : 'rgba(255,122,61,0.4)',
-              color: '#fff',
-              fontSize: 18,
-              fontWeight: 700,
-              boxShadow: selected !== null ? '0 4px 16px rgba(255,122,61,0.35)' : 'none',
-              cursor: selected !== null ? 'pointer' : 'not-allowed',
+              background: selected === c.id ? 'var(--color-accent)' : '#fff',
+              border: `2px solid ${selected === c.id ? 'var(--color-primary)' : 'var(--color-border)'}`,
+              borderRadius: 16,
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 14,
+              cursor: voted ? 'default' : 'pointer',
+              boxShadow: 'var(--shadow)',
+              opacity: voted && selected !== c.id ? 0.6 : 1,
             }}
           >
-            투표 완료 🗳️
+            <span style={{ fontSize: 28 }}>{c.emoji}</span>
+            <span style={{ fontSize: 17, fontWeight: 700, flex: 1, textAlign: 'left', color: 'var(--color-text)' }}>
+              {c.label}
+            </span>
+            <div
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: '50%',
+                border: `2px solid ${selected === c.id ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                background: selected === c.id ? 'var(--color-primary)' : 'transparent',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              {selected === c.id && (
+                <svg width="12" height="9" viewBox="0 0 12 9" fill="none">
+                  <path d="M1 4L4.5 7.5L11 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </div>
           </button>
-        </div>
+        ))}
+      </div>
+
+      {!voted && (
+        <button
+          onClick={handleVote}
+          disabled={!selected || loading}
+          style={{
+            width: '100%',
+            padding: '16px',
+            borderRadius: 14,
+            border: 'none',
+            background: selected && !loading ? 'var(--color-primary)' : '#ddd',
+            color: selected && !loading ? '#fff' : '#aaa',
+            fontWeight: 800,
+            fontSize: 17,
+            cursor: selected && !loading ? 'pointer' : 'not-allowed',
+            marginTop: 16,
+            boxShadow: selected ? 'var(--shadow-lg)' : 'none',
+          }}
+        >
+          {loading ? '처리 중...' : '투표 완료 🗳️'}
+        </button>
       )}
 
       <Toast message={toast.message} visible={toast.visible} />
