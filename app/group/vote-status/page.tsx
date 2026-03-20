@@ -13,6 +13,7 @@ import {
   updateRoomStatus,
 } from '@/lib/api/rooms';
 import { useVoteStatus } from '@/lib/hooks/useVoteStatus';
+import { useRoomResult } from '@/lib/hooks/useRoomResult';
 import { saveResult } from '@/lib/api/results';
 import type { RoomCandidate } from '@/lib/types';
 
@@ -30,19 +31,12 @@ export default function GroupVoteStatusPage() {
   const closedRef = useRef(false);
 
   const voteStatus = useVoteStatus(roomId);
+  const roomResult = useRoomResult(roomId);
 
-  // 참가자: 2초 간격으로 방 상태 폴링 → finished 되면 결과 화면으로 이동
+  // 방장·참가자 공통: results에 데이터 생기면 결과 화면으로 이동
   useEffect(() => {
-    if (isHost || !roomId) return;
-    const poll = setInterval(async () => {
-      const r = await getRoomById(roomId);
-      if (r?.status === 'finished') {
-        clearInterval(poll);
-        router.push('/group/result');
-      }
-    }, 2000);
-    return () => clearInterval(poll);
-  }, [isHost, roomId, router]);
+    if (roomResult) router.push('/group/result');
+  }, [roomResult, router]);
 
   useEffect(() => {
     async function init() {
@@ -132,9 +126,10 @@ export default function GroupVoteStatusPage() {
       });
 
       await updateRoomStatus(roomId, 'finished');
-      router.push('/group/result');
+      // router.push 제거 — useRoomResult가 results INSERT 감지 후 처리
     } catch {
-      router.push('/group/result');
+      setClosing(false);
+      closedRef.current = false;
     }
   }
 
