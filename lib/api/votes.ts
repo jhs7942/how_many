@@ -32,6 +32,6 @@ export async function getMyVote(
     .select()
     .eq('room_id', roomId)
     .eq('participant_id', participantId)
-    .single();
+    .maybeSingle();
   return data ?? null;
 }

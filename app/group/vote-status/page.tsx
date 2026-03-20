@@ -33,10 +33,23 @@ export default function GroupVoteStatusPage() {
   const voteStatus = useVoteStatus(roomId);
   const roomSub = useRoomSubscription(roomId);
 
-  // 방장·참가자 공통: rooms.status가 'finished'가 되면 결과 화면으로 이동
+  // 방장·참가자 공통: rooms.status가 'finished'가 되면 결과 화면으로 이동 (Realtime)
   useEffect(() => {
     if (roomSub?.status === 'finished') router.push('/group/result');
   }, [roomSub, router]);
+
+  // 참가자 폴백: Realtime을 놓쳤을 경우 3초 간격으로 rooms 상태 확인
+  useEffect(() => {
+    if (isHost || !roomId) return;
+    const poll = setInterval(async () => {
+      const r = await getRoomById(roomId);
+      if (r?.status === 'finished') {
+        clearInterval(poll);
+        router.push('/group/result');
+      }
+    }, 3000);
+    return () => clearInterval(poll);
+  }, [isHost, roomId, router]);
 
   useEffect(() => {
     async function init() {
@@ -126,7 +139,7 @@ export default function GroupVoteStatusPage() {
       });
 
       await updateRoomStatus(roomId, 'finished');
-      // router.push는 useRoomSubscription이 rooms.status='finished' 감지 후 처리
+      router.push('/group/result'); // 호스트 직접 이동 (Realtime 타이밍 경쟁 방지)
     } catch {
       setClosing(false);
       closedRef.current = false;
