@@ -115,18 +115,19 @@ export default function GroupVoteStatusPage() {
     try {
       // 결과 계산
       const counts = voteStatus.counts;
-      let winnerId = '';
+      let tiedIds: string[] = [];
       let maxCount = 0;
-      let isTie = false;
 
       Object.entries(counts).forEach(([cid, cnt]) => {
-        if (cnt > maxCount) { maxCount = cnt; winnerId = cid; isTie = false; }
-        else if (cnt === maxCount) { isTie = true; }
+        if (cnt > maxCount) { maxCount = cnt; tiedIds = [cid]; }
+        else if (cnt === maxCount) { tiedIds.push(cid); }
       });
 
-      const winner = isTie
-        ? candidates[Math.floor(Math.random() * candidates.length)]
-        : candidates.find((c) => c.id === winnerId) ?? candidates[0];
+      const isTie = tiedIds.length > 1;
+      const pool = tiedIds.length > 0
+        ? candidates.filter((c) => tiedIds.includes(c.id))
+        : candidates;
+      const winner = pool[Math.floor(Math.random() * pool.length)] ?? candidates[0];
 
       await saveResult({
         room_id: roomId,
