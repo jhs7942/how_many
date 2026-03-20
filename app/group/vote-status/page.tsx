@@ -13,7 +13,7 @@ import {
   updateRoomStatus,
 } from '@/lib/api/rooms';
 import { useVoteStatus } from '@/lib/hooks/useVoteStatus';
-import { useRoomResult } from '@/lib/hooks/useRoomResult';
+import { useRoomSubscription } from '@/lib/hooks/useRoomSubscription';
 import { saveResult } from '@/lib/api/results';
 import type { RoomCandidate } from '@/lib/types';
 
@@ -31,12 +31,12 @@ export default function GroupVoteStatusPage() {
   const closedRef = useRef(false);
 
   const voteStatus = useVoteStatus(roomId);
-  const roomResult = useRoomResult(roomId);
+  const roomSub = useRoomSubscription(roomId);
 
-  // 방장·참가자 공통: results에 데이터 생기면 결과 화면으로 이동
+  // 방장·참가자 공통: rooms.status가 'finished'가 되면 결과 화면으로 이동
   useEffect(() => {
-    if (roomResult) router.push('/group/result');
-  }, [roomResult, router]);
+    if (roomSub?.status === 'finished') router.push('/group/result');
+  }, [roomSub, router]);
 
   useEffect(() => {
     async function init() {
@@ -126,7 +126,7 @@ export default function GroupVoteStatusPage() {
       });
 
       await updateRoomStatus(roomId, 'finished');
-      // router.push 제거 — useRoomResult가 results INSERT 감지 후 처리
+      // router.push는 useRoomSubscription이 rooms.status='finished' 감지 후 처리
     } catch {
       setClosing(false);
       closedRef.current = false;

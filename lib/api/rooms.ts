@@ -95,7 +95,7 @@ export async function joinRoom(
     .select()
     .eq('room_id', roomId)
     .eq('client_id', clientId)
-    .single();
+    .maybeSingle();
 
   if (existing) {
     const { data, error } = await sb
@@ -143,6 +143,6 @@ export async function getParticipant(
     .select()
     .eq('room_id', roomId)
     .eq('client_id', clientId)
-    .single();
+    .maybeSingle();
   return data ?? null;
 }

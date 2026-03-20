@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getSupabase } from '../supabase';
-import type { Vote, Participant } from '../types';
+import type { Vote } from '../types';
 
 interface VoteStatus {
   counts: Record<string, number>;
@@ -16,15 +16,10 @@ export function useVoteStatus(roomId: string | null): VoteStatus {
     const sb = getSupabase();
 
     async function load() {
-      const threshold = new Date(Date.now() - 30000).toISOString();
       const [{ data: participants }, { data: votes }] = await Promise.all([
         sb.from('participants').select().eq('room_id', roomId),
         sb.from('votes').select().eq('room_id', roomId),
       ]);
-
-      const active = (participants ?? []).filter(
-        (p: Participant) => !p.last_seen || new Date(p.last_seen) > new Date(threshold)
-      );
 
       const counts: Record<string, number> = {};
       (votes ?? []).forEach((v: Vote) => {
@@ -34,7 +29,7 @@ export function useVoteStatus(roomId: string | null): VoteStatus {
       setStatus({
         counts,
         completedCount: votes?.length ?? 0,
-        totalCount: active.length,
+        totalCount: participants?.length ?? 0,
       });
     }
 
