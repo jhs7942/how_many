@@ -13,7 +13,6 @@ import {
   updateRoomStatus,
 } from '@/lib/api/rooms';
 import { useVoteStatus } from '@/lib/hooks/useVoteStatus';
-import { useRoomSubscription } from '@/lib/hooks/useRoomSubscription';
 import { saveResult } from '@/lib/api/results';
 import type { RoomCandidate } from '@/lib/types';
 
@@ -31,14 +30,19 @@ export default function GroupVoteStatusPage() {
   const closedRef = useRef(false);
 
   const voteStatus = useVoteStatus(roomId);
-  const room = useRoomSubscription(roomId);
 
-  // 참가자: 방장이 결과 확정 시 자동 이동
+  // 참가자: 2초 간격으로 방 상태 폴링 → finished 되면 결과 화면으로 이동
   useEffect(() => {
-    if (!isHost && room?.status === 'finished') {
-      router.push('/group/result');
-    }
-  }, [room?.status, isHost, router]);
+    if (isHost || !roomId) return;
+    const poll = setInterval(async () => {
+      const r = await getRoomById(roomId);
+      if (r?.status === 'finished') {
+        clearInterval(poll);
+        router.push('/group/result');
+      }
+    }, 2000);
+    return () => clearInterval(poll);
+  }, [isHost, roomId, router]);
 
   useEffect(() => {
     async function init() {
