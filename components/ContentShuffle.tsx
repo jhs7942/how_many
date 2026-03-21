@@ -185,6 +185,19 @@ export default function ContentShuffle({
                 🥤
               </div>
 
+              {/* 결과 레이블 — 이모지 위, 컵 아래 */}
+              {revealed && isWinner && (
+                <span style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: 'var(--color-primary)',
+                  marginTop: 4,
+                  marginBottom: 2,
+                }}>
+                  {segments[cupIdx].label}
+                </span>
+              )}
+
               {/* 컨텐츠 아이콘 (컵 아래) */}
               <div
                 style={{
@@ -196,7 +209,7 @@ export default function ContentShuffle({
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: CUP_W * 0.3,
-                  marginTop: -CUP_W * 0.1,
+                  marginTop: revealed && isWinner ? 0 : -CUP_W * 0.1,
                   transition: 'opacity 0.3s',
                   opacity: isLifted ? 1 : 0,
                 }}
@@ -205,18 +218,6 @@ export default function ContentShuffle({
                   {segments[cupIdx].emoji}
                 </span>
               </div>
-
-              {/* 결과 레이블 */}
-              {revealed && isWinner && (
-                <span style={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: 'var(--color-primary)',
-                  marginTop: 4,
-                }}>
-                  {segments[cupIdx].label}
-                </span>
-              )}
             </div>
           );
         })}
