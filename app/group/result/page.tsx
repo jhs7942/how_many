@@ -52,8 +52,7 @@ export default function GroupResultPage() {
 
   async function handleShare() {
     if (!result) return;
-    const url = `${window.location.origin}/result/${result.id}`;
-    await copyToClipboard(url);
+    await copyToClipboard(`${window.location.origin}/result/${result.id}`);
     showToast('공유 링크가 복사됐어요! 📤');
   }
 

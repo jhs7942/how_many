@@ -38,12 +38,12 @@ export default function SoloResultPage() {
 
   const handleShare = async () => {
     if (!activity) return;
-    if (resultId) {
-      router.push(`/result/${resultId}`);
-    } else {
-      await copyToClipboard(window.location.href);
-      showToast('공유 링크가 복사됐어요! 📋');
+    if (!resultId) {
+      showToast('공유 링크를 만들 수 없어요 😢');
+      return;
     }
+    await copyToClipboard(`${window.location.origin}/result/${resultId}`);
+    showToast('공유 링크가 복사됐어요! 📋');
   };
 
   const handleMapSearch = (service: 'kakao' | 'naver') => {

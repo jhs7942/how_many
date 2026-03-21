@@ -6,6 +6,7 @@ import BackButton from '@/components/BackButton';
 import PageLayout from '@/components/PageLayout';
 import SpinWheel, { SpinWheelHandle } from '@/components/SpinWheel';
 import { session } from '@/lib/session';
+import { saveResult } from '@/lib/api/results';
 import { PLACE_DATA } from '@/lib/data';
 
 export default function SoloPlaceSpinPage() {
@@ -39,10 +40,24 @@ export default function SoloPlaceSpinPage() {
     wheelRef.current?.spin();
   };
 
-  const handleResult = (result: { label: string; emoji: string }) => {
+  const handleResult = async (result: { label: string; emoji: string }) => {
     setIsSpinning(false);
     setHasResult(true);
     session.set('place', result);
+    try {
+      const saved = await saveResult({
+        room_id: null,
+        winner_label: result.label,
+        winner_emoji: result.emoji,
+        method: 'spin',
+        is_tie: false,
+        vote_summary: null,
+        location: null,
+      });
+      session.set('placeResultId', saved.id);
+    } catch {
+      // DB 저장 실패해도 결과는 보여줌
+    }
     setTimeout(() => {
       router.push('/solo/place/result');
     }, 800);

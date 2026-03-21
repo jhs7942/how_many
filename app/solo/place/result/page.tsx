@@ -13,6 +13,7 @@ export default function SoloPlaceResultPage() {
   const { toast, showToast } = useToast();
   const [activity, setActivity] = useState<{ label: string; emoji: string } | null>(null);
   const [place, setPlace] = useState<{ label: string; emoji: string } | null>(null);
+  const [placeResultId, setPlaceResultId] = useState<string | null>(null);
 
   useEffect(() => {
     const savedActivity = session.get<{ label: string; emoji: string }>('activity');
@@ -23,14 +24,17 @@ export default function SoloPlaceResultPage() {
     }
     setActivity(savedActivity);
     setPlace(savedPlace);
+    setPlaceResultId(session.get<string>('placeResultId'));
   }, [router]);
 
   const handleShare = async () => {
     if (!activity || !place) return;
-    await copyToClipboard(
-      `오늘의 결정: ${activity.label} ${activity.emoji} → ${place.label} ${place.emoji} - 몇명이니`
-    );
-    showToast('클립보드에 복사되었어요! 📋');
+    if (!placeResultId) {
+      showToast('공유 링크를 만들 수 없어요 😢');
+      return;
+    }
+    await copyToClipboard(`${window.location.origin}/result/${placeResultId}`);
+    showToast('공유 링크가 복사됐어요! 📋');
   };
 
   const handleMapSearch = (mapType: 'kakao' | 'naver') => {
