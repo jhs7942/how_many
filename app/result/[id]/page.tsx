@@ -55,7 +55,7 @@ export default function SharedResultPage() {
     );
   }
 
-  const methodLabel = result.method === 'vote' ? '투표' : result.method === 'spin' ? '돌림판' : '야바위';
+  const methodLabel = { vote: '투표', spin: '돌림판', shuffle: '컨텐츠 셔플', slot: '슬롯머신', rope: '줄 뽑기' }[result.method] ?? '랜덤';
   const createdAt = new Date(result.created_at);
   const dateStr = `${createdAt.getFullYear()}.${String(createdAt.getMonth() + 1).padStart(2, '0')}.${String(createdAt.getDate()).padStart(2, '0')}`;
 
