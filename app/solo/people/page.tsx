@@ -47,6 +47,7 @@ export default function SoloPeoplePage() {
           {PEOPLE_OPTIONS.map(({ count, emoji, label }) => (
             <button
               key={count}
+              data-testid={`btn-people-${count}`}
               onClick={() => handleSelect(count)}
               style={{
                 aspectRatio: '1',

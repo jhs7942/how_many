@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useRef, useState, useCallback } from 'react';
 
 interface ToastProps {
   message: string;
@@ -10,6 +10,7 @@ interface ToastProps {
 export default function Toast({ message, visible }: ToastProps) {
   return (
     <div
+      data-testid="toast-message"
       style={{
         position: 'fixed',
         bottom: 32,
@@ -37,11 +38,16 @@ export default function Toast({ message, visible }: ToastProps) {
 // 전역 토스트 훅
 export function useToast() {
   const [toast, setToast] = useState({ message: '', visible: false });
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const showToast = (message: string, duration = 2000) => {
+  const showToast = useCallback((message: string, duration = 2000) => {
+    if (timerRef.current) clearTimeout(timerRef.current);
     setToast({ message, visible: true });
-    setTimeout(() => setToast(prev => ({ ...prev, visible: false })), duration);
-  };
+    timerRef.current = setTimeout(
+      () => setToast(prev => ({ ...prev, visible: false })),
+      duration
+    );
+  }, []);
 
   return { toast, showToast };
 }

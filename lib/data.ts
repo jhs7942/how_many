@@ -95,20 +95,3 @@ export const PLACE_DATA: Record<string, { label: string; emoji: string }[]> = {
     { label: '닭갈비 집', emoji: '🍗' },
   ],
 };
-
-// 더미 참여자 데이터
-export const DUMMY_PARTICIPANTS = [
-  { name: '민준', voted: true, emoji: '🐯' },
-  { name: '서연', voted: true, emoji: '🦊' },
-  { name: '지호', voted: false, emoji: '🐧' },
-  { name: '하은', voted: false, emoji: '🐰' },
-  { name: '도윤', voted: true, emoji: '🦁' },
-];
-
-// 더미 투표 결과 데이터
-export const DUMMY_VOTE_RESULTS = [
-  { label: '보드게임', emoji: '🎲', votes: 3 },
-  { label: '노래방', emoji: '🎤', votes: 3 },
-  { label: '방탈출', emoji: '🔐', votes: 2 },
-  { label: '볼링', emoji: '🎳', votes: 1 },
-];

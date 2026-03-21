@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import PageLayout from '@/components/PageLayout';
 import { session } from '@/lib/session';
@@ -97,18 +97,8 @@ export default function GroupVoteStatusPage() {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [roomId]);
 
-  // 자동 마감 (모두 투표 완료 or 시간 종료)
-  useEffect(() => {
-    if (!isHost || closedRef.current || !roomId) return;
-    const allVoted = voteStatus.totalCount > 0 && voteStatus.completedCount >= voteStatus.totalCount;
-    if (allVoted || timeLeft <= 0) {
-      closeVoting();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [voteStatus, timeLeft, isHost]);
-
-  async function closeVoting() {
-    if (closedRef.current || !roomId) return;
+  const closeVoting = useCallback(async () => {
+    if (closedRef.current || !roomId || !candidates.length) return;
     closedRef.current = true;
     setClosing(true);
 
@@ -145,7 +135,16 @@ export default function GroupVoteStatusPage() {
       setClosing(false);
       closedRef.current = false;
     }
-  }
+  }, [roomId, candidates, voteStatus.counts, router]);
+
+  // 자동 마감 (모두 투표 완료 or 시간 종료)
+  useEffect(() => {
+    if (!isHost || closedRef.current || !roomId) return;
+    const allVoted = voteStatus.totalCount > 0 && voteStatus.completedCount >= voteStatus.totalCount;
+    if (allVoted || timeLeft <= 0) {
+      closeVoting();
+    }
+  }, [voteStatus, timeLeft, isHost, roomId, closeVoting]);
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -167,12 +166,15 @@ export default function GroupVoteStatusPage() {
         }}
       >
         <p style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>남은 시간</p>
-        <p style={{
-          fontSize: 36,
-          fontWeight: 900,
-          color: timeLeft <= 30 ? '#ff4444' : 'var(--color-primary)',
-          fontVariantNumeric: 'tabular-nums',
-        }}>
+        <p
+          data-testid="timer"
+          style={{
+            fontSize: 36,
+            fontWeight: 900,
+            color: timeLeft <= 30 ? '#ff4444' : 'var(--color-primary)',
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
           {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
         </p>
       </div>
@@ -181,7 +183,7 @@ export default function GroupVoteStatusPage() {
       <div style={{ marginTop: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#888', marginBottom: 8 }}>
           <span>투표 완료</span>
-          <span>{voteStatus.completedCount} / {voteStatus.totalCount}명</span>
+          <span data-testid="progress-text">{voteStatus.completedCount} / {voteStatus.totalCount}명</span>
         </div>
         <div style={{ height: 8, background: '#eee', borderRadius: 4, overflow: 'hidden' }}>
           <div
@@ -199,6 +201,7 @@ export default function GroupVoteStatusPage() {
       {/* 방장: 강제 마감 버튼 */}
       {isHost && (
         <button
+          data-testid="btn-force-close"
           onClick={closeVoting}
           disabled={closing}
           style={{

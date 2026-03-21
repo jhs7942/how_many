@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { mulberry32 } from '@/lib/utils';
 
 interface ContentShuffleProps {
   segments: { label: string; emoji: string }[];
@@ -11,15 +12,6 @@ interface ContentShuffleProps {
 
 type GameState = 'idle' | 'showing' | 'covering' | 'shuffling' | 'choosing' | 'revealing';
 
-// mulberry32 PRNG
-function mulberry32(a: number) {
-  return function () {
-    a |= 0; a = (a + 0x6D2B79F5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 export default function ContentShuffle({
   segments,
@@ -35,37 +27,39 @@ export default function ContentShuffle({
   const [revealed, setRevealed] = useState(false);
   const [shakingCups, setShakingCups] = useState<Set<number>>(new Set());
   const posRef = useRef(positions);
+  const cancelledRef = useRef(false);
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => { posRef.current = positions; }, [positions]);
 
-  // 게임 자동 시작
-  useEffect(() => {
-    if (gameState !== 'idle') return;
-    startGame();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const delay = useCallback((ms: number) => {
+    return new Promise<void>((r) => {
+      const t = setTimeout(r, ms);
+      timersRef.current.push(t);
+    });
   }, []);
 
-  async function delay(ms: number) {
-    return new Promise((r) => setTimeout(r, ms));
-  }
-
-  async function startGame() {
+  const startGame = useCallback(async () => {
+    if (cancelledRef.current) return;
     const actualSeed = seed ?? Math.floor(Math.random() * 2147483647);
     const rng = mulberry32(actualSeed);
 
     // 1. showing: 컨텐츠 위치 보여주기
     setGameState('showing');
     await delay(2000);
+    if (cancelledRef.current) return;
 
     // 2. covering: 컵 덮기
     setGameState('covering');
     await delay(600);
+    if (cancelledRef.current) return;
 
     // 3. shuffling: 셔플 + 흔들기 애니메이션
     setGameState('shuffling');
     const shuffleCount = 6 + Math.floor(rng() * 4); // 6~9번 스왑
 
     for (let i = 0; i < shuffleCount; i++) {
+      if (cancelledRef.current) return;
       const curr = [...posRef.current];
       const a = Math.floor(rng() * n);
       let b = Math.floor(rng() * (n - 1));
@@ -73,11 +67,14 @@ export default function ContentShuffle({
 
       setShakingCups(new Set([a, b]));
       await delay(80);
+      if (cancelledRef.current) return;
       [curr[a], curr[b]] = [curr[b], curr[a]];
       setPositions([...curr]);
       setShakingCups(new Set());
       await delay(260);
     }
+
+    if (cancelledRef.current) return;
 
     // 4. choosing 또는 자동 공개
     if (resultIndex !== undefined) {
@@ -85,21 +82,37 @@ export default function ContentShuffle({
       const screenPos = posRef.current[resultIndex];
       setWinnerScreenPos(screenPos);
       setGameState('revealing');
-      setTimeout(() => setRevealed(true), 600);
-      setTimeout(() => onResult(resultIndex), 1800);
+      const t1 = setTimeout(() => { if (!cancelledRef.current) setRevealed(true); }, 600);
+      const t2 = setTimeout(() => { if (!cancelledRef.current) onResult(resultIndex); }, 1800);
+      timersRef.current.push(t1, t2);
     } else {
       // 사용자가 직접 선택
       setGameState('choosing');
     }
-  }
+  }, [seed, resultIndex, onResult, delay, n]);
+
+  // 게임 자동 시작
+  useEffect(() => {
+    cancelledRef.current = false;
+    timersRef.current = [];
+    if (gameState !== 'idle') return;
+    startGame();
+    return () => {
+      cancelledRef.current = true;
+      timersRef.current.forEach(clearTimeout);
+      timersRef.current = [];
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleChoose(screenPos: number) {
     if (gameState !== 'choosing') return;
     const cupIdx = posRef.current.indexOf(screenPos);
     setWinnerScreenPos(screenPos);
     setGameState('revealing');
-    setTimeout(() => setRevealed(true), 600);
-    setTimeout(() => onResult(cupIdx), 1800);
+    const t1 = setTimeout(() => { if (!cancelledRef.current) setRevealed(true); }, 600);
+    const t2 = setTimeout(() => { if (!cancelledRef.current) onResult(cupIdx); }, 1800);
+    timersRef.current.push(t1, t2);
   }
 
   const gap = 12;

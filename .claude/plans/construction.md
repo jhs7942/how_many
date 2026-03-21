@@ -1,6 +1,6 @@
-# 몇명이니 (HowMany) — Construction ver_5
+# 몇명이니 (HowMany) — Construction ver_6
 
-> 마지막 업데이트: 2026-03-19
+> 마지막 업데이트: 2026-03-21 (ver_6 — 보안·버그·코드품질 개선 + E2E 테스트 계획 추가)
 
 ---
 
@@ -389,3 +389,252 @@ npm install @supabase/supabase-js @supabase/ssr
 | 4 | Group 플로우 (setting → create → join → lobby → vote/vote-status → random → result) |
 | 5 | 홈 수정 + 공유 결과 페이지 + 에지 케이스 (새로고침 복구, 방 만료, 방장 이탈) |
 | 6 | 마무리 (globals.css 컨텐츠 셔플 키프레임, sessionStorage 정리, CLAUDE.md 업데이트) |
+
+---
+
+## 17. 보안 개선 (ver_6 신규)
+
+### 17-1. 환경 변수 정리
+
+```env
+# .env.local — 이 변수만 유지
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+
+# 삭제 대상
+# SUPABASE_ACCESS_TOKEN  ← Supabase 대시보드에서 즉시 폐기 후 제거
+```
+
+### 17-2. RLS 정책 (Supabase 대시보드 적용)
+
+```sql
+-- rooms: 누구나 SELECT, host만 UPDATE
+alter table rooms enable row level security;
+create policy "rooms_select" on rooms for select using (true);
+create policy "rooms_insert" on rooms for insert with check (true);
+create policy "rooms_update" on rooms for update using (true); -- MVP: 앱 레벨 검증
+
+-- participants: is_host 클라이언트 조작 방지
+-- host_client_id와 일치할 때만 is_host=true 허용
+create policy "participants_insert" on participants
+  for insert with check (
+    is_host = false OR
+    client_id = (select host_client_id from rooms where id = room_id)
+  );
+
+-- results: 중복 저장 방지 (room_id UNIQUE 제약)
+alter table results add constraint results_room_id_unique unique (room_id);
+
+-- votes, room_candidates, random_events: SELECT/INSERT open (MVP)
+alter table votes enable row level security;
+create policy "votes_all" on votes using (true) with check (true);
+alter table room_candidates enable row level security;
+create policy "room_candidates_all" on room_candidates using (true) with check (true);
+alter table random_events enable row level security;
+create policy "random_events_all" on random_events using (true) with check (true);
+```
+
+---
+
+## 18. 버그 수정 계획 (ver_6 신규)
+
+### 18-1. ContentShuffle.tsx — setTimeout cleanup
+
+```ts
+// startGame() 내 모든 setTimeout을 ref 배열로 관리
+const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+// useEffect cleanup
+useEffect(() => {
+  return () => { timersRef.current.forEach(clearTimeout); };
+}, []);
+
+// setTimeout 등록 시
+const t = setTimeout(() => { if (!cancelledRef.current) setRevealed(true); }, 600);
+timersRef.current.push(t);
+```
+
+### 18-2. group/result/page.tsx — 재귀 setTimeout cleanup
+
+```ts
+useEffect(() => {
+  let cancelled = false;
+  const timers: ReturnType<typeof setTimeout>[] = [];
+
+  async function init() {
+    const res = await getResultByRoomId(roomId);
+    if (cancelled) return;
+    if (!res) {
+      const t = setTimeout(init, 1500);
+      timers.push(t);
+      return;
+    }
+    // 결과 처리...
+  }
+  init();
+  return () => { cancelled = true; timers.forEach(clearTimeout); };
+}, [roomId, router]);
+```
+
+### 18-3. vote-status/page.tsx — stale closure 수정
+
+```ts
+// closeVoting을 useCallback으로 메모이제이션, 의존성 명시
+const closeVoting = useCallback(async () => {
+  if (closedRef.current || !roomId || !candidates.length) return;
+  closedRef.current = true;
+  // ...집계 로직
+}, [roomId, candidates, voteStatus.counts]);
+
+// useEffect 의존성 배열에 closeVoting 포함
+useEffect(() => {
+  if (!isHost || closedRef.current || !roomId) return;
+  const allVoted = voteStatus.totalCount > 0 &&
+    voteStatus.completedCount >= voteStatus.totalCount;
+  if (allVoted || timeLeft <= 0) closeVoting();
+}, [voteStatus, timeLeft, isHost, closeVoting]);
+```
+
+레이스 컨디션 방지: `results` 테이블에 `room_id UNIQUE` 제약 추가 (17-2 참조)
+
+### 18-4. group/random/page.tsx — 저장 실패 처리
+
+```ts
+} catch (err) {
+  console.error('결과 저장 실패:', err);
+  // 방 상태를 다시 finished로 시도 (참여자 화면 해제)
+  await updateRoomStatus(roomId, 'finished').catch(() => null);
+  router.push('/group/result');
+}
+```
+
+### 18-5. CandidateEditor.tsx — key={i} 수정
+
+```tsx
+// 안정적인 고유 key 사용
+{candidates.map((c) => (
+  <div key={c.id ?? c.label}  // id 없으면 label로 fallback
+```
+
+### 18-6. lib/api/rooms.ts — 에러 반환값 처리
+
+```ts
+export async function updateRoomStatus(roomId: string, status: Room['status']): Promise<void> {
+  const { error } = await getSupabase()
+    .from('rooms').update({ status }).eq('id', roomId);
+  if (error) throw error;
+}
+```
+
+---
+
+## 19. 코드 품질 개선 (ver_6 신규)
+
+### 19-1. mulberry32 PRNG 중복 제거
+
+```ts
+// lib/utils.ts에 추가
+export function mulberry32(seed: number): () => number {
+  return () => {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+```
+
+`SpinWheel.tsx`, `ContentShuffle.tsx`에서 `import { mulberry32 } from '@/lib/utils'` 로 교체.
+
+### 19-2. Toast.tsx — timer 관리
+
+```ts
+const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+const showToast = useCallback((message: string, duration = 2000) => {
+  if (timerRef.current) clearTimeout(timerRef.current);
+  setToast({ message, visible: true });
+  timerRef.current = setTimeout(
+    () => setToast(prev => ({ ...prev, visible: false })),
+    duration
+  );
+}, []);
+```
+
+### 19-3. group/wait/page.tsx — Dead Code 제거
+
+더미 데이터만 사용하는 `/group/wait/page.tsx`는 실제 플로우에서 사용되지 않음 확인 후 삭제.
+`lib/data.ts`의 `DUMMY_PARTICIPANTS`, `DUMMY_VOTE_RESULTS` 상수도 함께 제거.
+
+---
+
+## 20. E2E 테스트 설정 (ver_6 신규)
+
+### 20-1. 의존성 추가
+
+```bash
+npm install --save-dev @playwright/test
+npx playwright install chromium
+```
+
+### 20-2. playwright.config.ts
+
+```ts
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './e2e',
+  timeout: 30_000,
+  use: {
+    baseURL: 'http://localhost:3000',
+    viewport: { width: 390, height: 844 },  // iPhone 14
+    trace: 'on-first-retry',
+  },
+  projects: [
+    { name: 'mobile-chrome', use: { ...devices['Pixel 5'] } },
+  ],
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+  },
+});
+```
+
+### 20-3. data-testid 추가 대상 (핵심)
+
+```
+공통: btn-back, toast-message, loading-spinner
+Solo: btn-mode-default, btn-mode-custom, btn-people-{n}, btn-spin, result-card, btn-share, btn-retry, btn-home
+Group: btn-mode-vote, btn-mode-random, btn-create-room, room-code, btn-start-game,
+       input-nickname, btn-join, candidate-button-{id}, btn-vote-submit,
+       timer, progress-bar, btn-force-close, winner-label, vote-summary-chart
+```
+
+### 20-4. 테스트 디렉토리 구조
+
+```
+e2e/
+├── solo/
+│   ├── solo-flow.spec.ts       # 기본 Solo 플로우 (6케이스)
+│   └── solo-error.spec.ts      # 세션 없이 진입 등 오류 케이스
+├── group/
+│   ├── group-host.spec.ts      # 방장 시나리오 (5케이스)
+│   ├── group-member.spec.ts    # 참여자 시나리오 (4케이스)
+│   └── group-error.spec.ts     # 입력 검증, 네트워크 오류 (4케이스)
+└── fixtures/
+    └── supabase.ts             # 테스트 방 생성/삭제 헬퍼
+```
+
+---
+
+## 21. 구현 순서 (Phase — ver_6)
+
+| Phase | 내용 |
+|-------|------|
+| S0 | **보안**: `.env.local`에서 `SUPABASE_ACCESS_TOKEN` 제거 + Supabase 대시보드 RLS 적용 |
+| S1 | **버그**: ContentShuffle/result/vote-status/random setTimeout cleanup, closeVoting stale closure |
+| S2 | **버그**: CandidateEditor key={i}, updateRoomStatus 에러 핸들링, group/wait dead code 제거 |
+| S3 | **품질**: mulberry32 utils.ts 추출, Toast timer 관리 개선 |
+| S4 | **E2E**: data-testid 추가, Playwright 설정, Solo 플로우 테스트 작성 |
+| S5 | **E2E**: Group 플로우 테스트 작성 (방장 + 참여자 + 오류) |

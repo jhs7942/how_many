@@ -64,6 +64,17 @@ npm run start    # 빌드 후 프로덕션 서버 실행
 - 디자인 토큰: `var(--color-primary)` `#FF7A3D` (주황), `var(--color-bg)` `#FFF7F2`, `var(--color-text)` `#2E2E2E`
 - 최대 너비 `430px` (body에 고정), 모바일 앱 형태
 
+## ⚡ ECC 스킬 활용 규칙
+다음 상황 발생 시 해당 스킬을 자동으로 적용한다:
+
+- **frontend-patterns**: React 컴포넌트 작성·리팩토링 시 (SpinWheel, CandidateEditor 등)
+- **nextjs-turbopack**: Next.js 빌드·성능 최적화 관련 작업 시
+- **postgres-patterns**: Supabase DB 쿼리·스키마·인덱스 작업 시 (rooms, votes, results 테이블)
+- **e2e-testing**: Solo 또는 Group 플로우 테스트 작성 시
+- **security-review**: Supabase RLS 설정·anon key 노출·방 코드 보안 관련 작업 시
+
+---
+
 ### Hydration 주의
 
 `session.get()` 은 클라이언트 전용(`typeof window === 'undefined'` 가드 있음).

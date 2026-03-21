@@ -70,6 +70,7 @@ export default function SoloResultPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* 결과 카드 */}
         <div
+          data-testid="result-card"
           style={{
             background: 'linear-gradient(135deg, var(--color-primary) 0%, #FF9A6C 100%)',
             borderRadius: 16,
@@ -82,7 +83,7 @@ export default function SoloResultPage() {
         >
           <span style={{ fontSize: 56, marginBottom: 12, display: 'block' }}>{activity.emoji}</span>
           <div style={{ fontSize: 14, opacity: 0.85, marginBottom: 6 }}>오늘의 활동</div>
-          <div style={{ fontSize: 28, fontWeight: 800 }}>{activity.label}</div>
+          <div data-testid="result-activity" style={{ fontSize: 28, fontWeight: 800 }}>{activity.label}</div>
           {location && (
             <div style={{ fontSize: 13, opacity: 0.8, marginTop: 8 }}>📍 {location}</div>
           )}
@@ -98,6 +99,7 @@ export default function SoloResultPage() {
         {location && (
           <div style={{ display: 'flex', gap: 8 }}>
             <button
+              data-testid="btn-map-kakao"
               onClick={() => handleMapSearch('kakao')}
               style={{
                 flex: 1,
@@ -114,6 +116,7 @@ export default function SoloResultPage() {
               카카오지도 🗺️
             </button>
             <button
+              data-testid="btn-map-naver"
               onClick={() => handleMapSearch('naver')}
               style={{
                 flex: 1,
@@ -135,6 +138,7 @@ export default function SoloResultPage() {
         {/* 버튼 영역 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 'auto', paddingTop: 16 }}>
           <button
+            data-testid="btn-share"
             onClick={handleShare}
             style={{
               width: '100%',
@@ -152,6 +156,7 @@ export default function SoloResultPage() {
             결과 공유하기 📤
           </button>
           <button
+            data-testid="btn-retry"
             onClick={() => router.push('/solo/random')}
             style={{
               width: '100%',
@@ -168,6 +173,7 @@ export default function SoloResultPage() {
             다시 돌리기 🔄
           </button>
           <button
+            data-testid="btn-home"
             onClick={() => router.push('/')}
             style={{
               width: '100%',

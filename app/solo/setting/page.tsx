@@ -32,6 +32,7 @@ export default function SoloSettingPage() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <button
+            data-testid="btn-mode-default"
             onClick={() => choose('default')}
             style={{
               background: '#fff',
@@ -54,6 +55,7 @@ export default function SoloSettingPage() {
           </button>
 
           <button
+            data-testid="btn-mode-custom"
             onClick={() => choose('custom')}
             style={{
               background: '#fff',

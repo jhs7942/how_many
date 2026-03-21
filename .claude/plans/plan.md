@@ -1,6 +1,6 @@
-# 몇명이니 (HowMany) — PLAN B 요구사항 ver_5
+# 몇명이니 (HowMany) — PLAN B 요구사항 ver_6
 
-> 마지막 업데이트: 2026-03-19 (ver_5 — Supabase 도입, 컨텐츠 셔플·랜덤의 랜덤·직접설정·위치결정·결과공유 추가)
+> 마지막 업데이트: 2026-03-21 (ver_6 — 경쟁사 분석, 코드리뷰, E2E 테스트 계획 추가 / 보안·버그 개선 계획)
 
 ## 컨텍스트
 
@@ -285,3 +285,95 @@ ver_5는 Supabase를 도입해 실시간 기능을 구현하고, 컨텐츠 셔�
 13. 참여자 이탈: 투표 전 이탈 → M-1 반영, 투표 후 이탈 → 투표 유지 확인
 14. 다시 하기: 결과 화면 → 같은 설정으로 재시작 확인
 15. 컨텐츠 셔플 컵 수: 후보 2개~8개별 컨텐츠 셔플 UI 정상 표시 확인
+
+---
+
+## 경쟁사 분석 (2026-03-21)
+
+### 시장 지형
+
+| 카테고리 | 대표 서비스 | 부족한 점 |
+|---------|-----------|---------|
+| 돌림판/룰렛 | Wheel of Names, 구슬 룰렛 | 직접 입력 필수, 그룹 기능 없음 |
+| 메뉴 결정 | 메뉴고르기 룰렛, 도구마스터 | 고정 메뉴, 1인 전용 |
+| 공식 투표 | 치즈버튼, 나우앤보트 | 조직 대상, 회원가입 필요, 과중한 UX |
+| 소셜 앱 내 투표 | 네이버 밴드, 소모임 | 기존 멤버 전제, 즉흥 결정 불가 |
+
+### how_many 차별화 포인트
+
+한국 시장에 동시에 갖춘 서비스가 **사실상 없는** 두 가지:
+1. **상황 인식 후보 큐레이션** — 인원수·상황에 맞는 선택지 자동 제시
+2. **가볍고 즉흥적인 그룹 실시간 투표** — 회원가입 없이 초대 코드로 즉시 참여
+
+### 차별화 강화 방향
+
+- 위치 기반 후보 (현재 위치 입력 → 주변 장소 추천)
+- 투표 결과 히스토리 (같은 그룹 재사용)
+- 카카오톡 공유 최적화 (OG 이미지, 딥링크)
+
+---
+
+## 코드리뷰 결과 (2026-03-21)
+
+### 보안 이슈 (즉시 대응)
+
+| 심각도 | 위치 | 문제 |
+|-------|------|------|
+| CRITICAL | `.env.local:3` | `SUPABASE_ACCESS_TOKEN` 평문 저장 — 관리자급 PAT, 즉시 폐기 필요 |
+| CRITICAL | `lib/supabase.ts` | RLS 미확인 + `is_host` 클라이언트에서 계산 후 INSERT → 방장 권한 탈취 가능 |
+
+### 버그 이슈
+
+| 심각도 | 위치 | 문제 |
+|-------|------|------|
+| HIGH | `ContentShuffle.tsx` | `setTimeout` cleanup 누락 → 언마운트 후 메모리 누수 |
+| HIGH | `group/result/page.tsx:32` | 재귀 `setTimeout` cleanup 없음 → 무한 루프 가능 |
+| HIGH | `group/vote-status/page.tsx` | `closeVoting` stale closure → `candidates`가 빈 배열일 때 `undefined` 저장 |
+| HIGH | `group/vote-status/page.tsx` | 방장 탭 여러 개 시 `closeVoting` 중복 실행 레이스 컨디션 |
+| HIGH | `group/random/page.tsx:97` | 저장 실패 시에도 방장만 result 페이지 이동 → 참여자 화면 멈춤 |
+| HIGH | `CandidateEditor.tsx:45` | `key={i}` (인덱스) 사용 → 삭제 시 DOM 재사용 버그 |
+
+### 코드 품질
+
+| 심각도 | 위치 | 문제 |
+|-------|------|------|
+| MEDIUM | `useHostPresence.ts` | 방장 재접속 시 복구 로직 불완전 |
+| MEDIUM | `SpinWheel.tsx` | `segments` stale closure (useImperativeHandle 의존성 없음) |
+| MEDIUM | `lib/api/rooms.ts` | `updateRoomStatus` 에러 반환값 무시 |
+| MEDIUM | `group/result/page.tsx` | `winner_label` 문자열 매칭 → 동명 후보 시 0표 표시 |
+| MEDIUM | `group/wait/page.tsx` | 더미 데이터만 사용, 실제 Supabase 미연결 (Dead Code) |
+| LOW | `Toast.tsx` | `setTimeout` cleanup 없음, 빠른 연속 호출 시 덮어쓰기 |
+| LOW | `lib/utils.ts` | deprecated `execCommand` 사용 |
+| LOW | `SpinWheel.tsx` + `ContentShuffle.tsx` | `mulberry32` PRNG 함수 중복 정의 |
+
+---
+
+## E2E 테스트 계획 (2026-03-21)
+
+### 현황
+
+- 테스트 파일 없음 (Playwright 미설정)
+- `data-testid` 없음
+
+### 필요 작업
+
+1. `data-testid` 80+ 개 추가 (각 페이지 버튼·입력·표시 요소)
+2. Playwright 설치 및 `playwright.config.ts` 작성
+3. Supabase 테스트 DB 준비 (Realtime 포함)
+
+### 테스트 구조
+
+```
+e2e/
+├── solo/
+│   ├── solo-flow.spec.ts    # 전체 Solo 플로우 (6케이스)
+│   └── solo-error.spec.ts
+├── group/
+│   ├── group-host.spec.ts   # 방장 시나리오 (5케이스)
+│   ├── group-member.spec.ts # 참여자 시나리오 (4케이스)
+│   └── group-error.spec.ts  # 오류 시나리오 (4케이스)
+└── fixtures/
+    └── supabase.ts           # 테스트 DB 초기화
+```
+
+### 총 테스트 케이스: ~40개 / 예상 실행 시간: ~15분

@@ -32,6 +32,7 @@ export default function GroupSettingPage() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <button
+            data-testid="btn-mode-vote"
             onClick={() => choose('vote')}
             style={{
               background: '#fff',
@@ -53,6 +54,7 @@ export default function GroupSettingPage() {
           </button>
 
           <button
+            data-testid="btn-mode-random"
             onClick={() => choose('random')}
             style={{
               background: '#fff',

@@ -95,6 +95,7 @@ export default function GroupVotePage() {
         {candidates.map((c) => (
           <button
             key={c.id}
+            data-testid={`candidate-button-${c.id}`}
             onClick={() => !voted && setSelected(c.id)}
             disabled={voted}
             style={{
@@ -139,6 +140,7 @@ export default function GroupVotePage() {
 
       {!voted && (
         <button
+          data-testid="btn-vote-submit"
           onClick={handleVote}
           disabled={!selected || loading}
           style={{

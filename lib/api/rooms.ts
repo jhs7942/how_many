@@ -78,7 +78,8 @@ export async function getRoomCandidates(roomId: string): Promise<RoomCandidate[]
 }
 
 export async function updateRoomStatus(roomId: string, status: Room['status']): Promise<void> {
-  await getSupabase().from('rooms').update({ status }).eq('id', roomId);
+  const { error } = await getSupabase().from('rooms').update({ status }).eq('id', roomId);
+  if (error) throw error;
 }
 
 export async function joinRoom(
@@ -128,10 +129,11 @@ export async function joinRoom(
 }
 
 export async function updateLastSeen(participantId: string): Promise<void> {
-  await getSupabase()
+  const { error } = await getSupabase()
     .from('participants')
     .update({ last_seen: new Date().toISOString() })
     .eq('id', participantId);
+  if (error) throw error;
 }
 
 export async function getParticipant(

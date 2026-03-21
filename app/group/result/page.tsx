@@ -18,6 +18,9 @@ export default function GroupResultPage() {
   const [animateBars, setAnimateBars] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
     async function init() {
       const roomId = session.get<string>('roomId');
       if (!roomId) { router.replace('/'); return; }
@@ -27,16 +30,24 @@ export default function GroupResultPage() {
         getRoomCandidates(roomId),
       ]);
 
+      if (cancelled) return;
+
       if (!res) {
         // 아직 결과가 없으면 잠시 후 재시도
-        setTimeout(init, 1500);
+        const t = setTimeout(init, 1500);
+        timers.push(t);
         return;
       }
       setResult(res);
       setCandidates(cands);
-      setTimeout(() => setAnimateBars(true), 200);
+      const t = setTimeout(() => { if (!cancelled) setAnimateBars(true); }, 200);
+      timers.push(t);
     }
     init();
+    return () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+    };
   }, [router]);
 
   async function handleShare() {
@@ -75,6 +86,7 @@ export default function GroupResultPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16, overflowY: 'auto' }}>
         {/* 위너 카드 */}
         <div
+          data-testid="result-card"
           style={{
             background: 'linear-gradient(135deg, var(--color-primary) 0%, #FF9A6C 100%)',
             borderRadius: 16,
@@ -91,14 +103,14 @@ export default function GroupResultPage() {
           <div style={{ fontSize: 14, opacity: 0.85, marginBottom: 6 }}>
             {result.method === 'vote' ? '최다 득표' : result.method === 'spin' ? '돌림판 결과' : '야바위 결과'}
           </div>
-          <div style={{ fontSize: 28, fontWeight: 800 }}>{result.winner_label}</div>
+          <div data-testid="winner-label" style={{ fontSize: 28, fontWeight: 800 }}>{result.winner_label}</div>
           {result.method === 'vote' && (
             <div style={{ fontSize: 15, opacity: 0.9, marginTop: 8 }}>
               {voteSummary[candidates.find(c => c.label === result.winner_label)?.id ?? ''] ?? 0}표 / 전체 {totalVotes}표
             </div>
           )}
           {result.is_tie && (
-            <div style={{ fontSize: 13, opacity: 0.85, marginTop: 8 }}>
+            <div data-testid="tie-message" style={{ fontSize: 13, opacity: 0.85, marginTop: 8 }}>
               🎲 동점! 행운의 추첨으로 결정됐어요
             </div>
           )}
@@ -141,6 +153,7 @@ export default function GroupResultPage() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingBottom: 8 }}>
           <button
+            data-testid="btn-share"
             onClick={handleShare}
             style={{
               width: '100%',
@@ -158,6 +171,7 @@ export default function GroupResultPage() {
             결과 공유하기 📤
           </button>
           <button
+            data-testid="btn-home"
             onClick={() => router.push('/')}
             style={{
               width: '100%',

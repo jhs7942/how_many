@@ -42,7 +42,7 @@ export default function CandidateEditor({
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {candidates.map((c, i) => (
           <div
-            key={i}
+            key={`${c.label}-${i}`}
             style={{
               display: 'flex',
               alignItems: 'center',

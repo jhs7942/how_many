@@ -93,6 +93,7 @@ export default function SoloRandomPage() {
               enableRespin={true}
             />
             <button
+              data-testid="btn-spin"
               onClick={handleSpin}
               disabled={isSpinning || done}
               style={{
