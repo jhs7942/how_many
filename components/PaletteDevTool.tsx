@@ -32,6 +32,7 @@ function resetColors() {
 export default function PaletteDevTool() {
   const [open, setOpen] = useState(false);
   const [colors, setColors] = useState<ColorMap>(getDefaults());
+  const [testMode, setTestMode] = useState(false);
 
   useEffect(() => {
     const saved = session.get<ColorMap>('devColors');
@@ -39,6 +40,7 @@ export default function PaletteDevTool() {
       setColors(saved);
       applyColors(saved);
     }
+    setTestMode(sessionStorage.getItem('devTestMode') === 'true');
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'F10') {
@@ -49,6 +51,16 @@ export default function PaletteDevTool() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  function toggleTestMode() {
+    const next = !testMode;
+    setTestMode(next);
+    if (next) {
+      sessionStorage.setItem('devTestMode', 'true');
+    } else {
+      sessionStorage.removeItem('devTestMode');
+    }
+  }
 
   const handleChange = (variable: string, value: string) => {
     const next = { ...colors, [variable]: value };
@@ -95,6 +107,48 @@ export default function PaletteDevTool() {
           </span>
           <span style={{ fontSize: 11, color: '#888' }}>색상 팔레트 (F10)</span>
         </div>
+
+        {/* 테스트 모드 토글 */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: testMode ? '#1a3a1a' : '#2a2a2a',
+            border: `1px solid ${testMode ? '#4caf50' : '#444'}`,
+            borderRadius: 8,
+            padding: '8px 10px',
+            marginBottom: 12,
+          }}
+        >
+          <div>
+            <span style={{ fontSize: 12, color: testMode ? '#4caf50' : '#888', fontWeight: 700 }}>
+              🎮 게임 타입 선택 모드
+            </span>
+            <p style={{ fontSize: 10, color: '#666', margin: '2px 0 0' }}>
+              {testMode ? '/solo/random 진입 시 게임 선택 화면 표시' : '꺼짐 — 랜덤 자동 선택'}
+            </p>
+          </div>
+          <button
+            onClick={toggleTestMode}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 6,
+              border: 'none',
+              background: testMode ? '#4caf50' : '#444',
+              color: '#fff',
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: 'pointer',
+              flexShrink: 0,
+              marginLeft: 8,
+            }}
+          >
+            {testMode ? 'ON' : 'OFF'}
+          </button>
+        </div>
+
+        <div style={{ height: 1, background: '#333', marginBottom: 10 }} />
 
         {/* 색상 항목 */}
         {COLOR_ITEMS.map(({ label, variable }) => (

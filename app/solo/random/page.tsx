@@ -22,13 +22,20 @@ export default function SoloRandomPage() {
   const [gameType, setGameType] = useState<'spin' | 'shuffle' | 'slot' | 'rope' | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [done, setDone] = useState(false);
+  const [testMode, setTestMode] = useState(false);
 
   useEffect(() => {
     const c = session.get<Candidate[]>('soloCandidates') ?? [];
     const loc = session.get<string>('soloLocation');
     setCandidates(c);
     setLocation(loc);
-    setGameType(pickGameType(c.length));
+
+    const isTest = sessionStorage.getItem('devTestMode') === 'true';
+    setTestMode(isTest);
+    // 테스트 모드가 아닐 때만 자동으로 게임 타입 결정
+    if (!isTest) {
+      setGameType(pickGameType(c.length));
+    }
   }, []);
 
   async function handleResult(winner: Candidate) {
@@ -56,6 +63,62 @@ export default function SoloRandomPage() {
     if (isSpinning || done) return;
     setIsSpinning(true);
     spinRef.current?.spin();
+  }
+
+  // 테스트 모드: 게임 타입 선택 화면
+  if (testMode && !gameType) {
+    const GAME_OPTIONS = [
+      { type: 'spin',    emoji: '🎡', label: '돌림판',       desc: '원판을 돌려 결정' },
+      { type: 'shuffle', emoji: '🔀', label: '컨텐츠 셔플',  desc: '컵 속에 숨은 정답 찾기' },
+      { type: 'slot',    emoji: '🎰', label: '슬롯머신',     desc: '레버를 당겨 잭팟' },
+      { type: 'rope',    emoji: '🪢', label: '줄 뽑기',      desc: '줄을 당겨 당첨 확인' },
+    ] as const;
+
+    return (
+      <PageLayout>
+        <div style={{ paddingTop: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <BackButton href="/solo/setting" />
+            <h1 style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-text)' }}>
+              🧪 게임 타입 선택
+            </h1>
+          </div>
+          <p style={{ fontSize: 12, color: '#f59e0b', marginTop: 6, paddingLeft: 4, fontWeight: 600 }}>
+            테스트 모드 — F10으로 끄면 랜덤 자동 선택
+          </p>
+        </div>
+
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 14, padding: '0 8px' }}>
+          {GAME_OPTIONS.map(({ type, emoji, label, desc }) => (
+            <button
+              key={type}
+              onClick={() => setGameType(type)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 16,
+                padding: '18px 20px',
+                borderRadius: 16,
+                border: '2px solid var(--color-border)',
+                background: 'var(--color-bg-card)',
+                cursor: 'pointer',
+                textAlign: 'left',
+                boxShadow: 'var(--shadow)',
+                transition: 'transform 0.1s, box-shadow 0.1s',
+              }}
+              onPointerDown={(e) => (e.currentTarget.style.transform = 'scale(0.97)')}
+              onPointerUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+            >
+              <span style={{ fontSize: 36 }}>{emoji}</span>
+              <div>
+                <p style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-text)', margin: 0 }}>{label}</p>
+                <p style={{ fontSize: 12, color: '#999', margin: '2px 0 0' }}>{desc}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </PageLayout>
+    );
   }
 
   if (!candidates.length || !gameType) {
