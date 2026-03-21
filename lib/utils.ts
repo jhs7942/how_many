@@ -14,6 +14,21 @@ export function generateRoomCode(): string {
   return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 
+// 게임 타입 선택 (후보 수에 따라 확률 분기)
+export function pickGameType(count: number): 'spin' | 'shuffle' | 'slot' | 'rope' {
+  const r = Math.random();
+  if (count >= 7) {
+    // rope는 줄이 너무 많으면 화면 공간 부족 → 제외
+    if (r < 0.4) return 'spin';
+    if (r < 0.6) return 'shuffle';
+    return 'slot';
+  }
+  if (r < 0.25) return 'spin';
+  if (r < 0.5) return 'shuffle';
+  if (r < 0.75) return 'slot';
+  return 'rope';
+}
+
 // 클립보드 복사
 export async function copyToClipboard(text: string): Promise<void> {
   try {

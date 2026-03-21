@@ -1,6 +1,6 @@
 export type RoomStatus = 'waiting' | 'voting' | 'random_playing' | 'finished';
 export type RoomMode = 'vote' | 'random';
-export type RandomEventType = 'spin' | 'shuffle';
+export type RandomEventType = 'spin' | 'shuffle' | 'slot' | 'rope';
 
 export interface Room {
   id: string;
@@ -46,7 +46,7 @@ export interface Result {
   room_id: string | null;
   winner_label: string;
   winner_emoji: string;
-  method: 'vote' | 'spin' | 'shuffle';
+  method: 'vote' | 'spin' | 'shuffle' | 'slot' | 'rope';
   is_tie: boolean;
   vote_summary: Record<string, number> | null;
   location: string | null;
