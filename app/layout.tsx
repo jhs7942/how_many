@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import Script from 'next/script';
 import "./globals.css";
 import PaletteDevTool from '@/components/PaletteDevTool'; // [TEST]
 import UrlNormalizer from '@/components/UrlNormalizer';
+import AndroidBackHandler from '@/components/AndroidBackHandler';
 
 export const metadata: Metadata = {
   title: "몇명이니 — 모임 결정 서비스",
@@ -30,9 +32,11 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <AndroidBackHandler />
         <UrlNormalizer />
         {children}
         <PaletteDevTool /> {/* [TEST] 색상 팔레트 테스트 기능 */}
+        <Script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" strategy="afterInteractive" />
       </body>
     </html>
   );

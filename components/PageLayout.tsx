@@ -9,7 +9,7 @@ export default function PageLayout({ children, className = '' }: PageLayoutProps
   return (
     <div
       style={{
-        minHeight: '100dvh',
+        minHeight: '100svh',
         display: 'flex',
         flexDirection: 'column',
         padding: '0 20px 32px',

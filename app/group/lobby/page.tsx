@@ -15,6 +15,7 @@ import {
   joinRoom,
   updateLastSeen,
   updateRoomStatus,
+  setVoteStartedAt,
 } from '@/lib/api/rooms';
 import { useRoomSubscription } from '@/lib/hooks/useRoomSubscription';
 import { useParticipants } from '@/lib/hooks/useParticipants';
@@ -105,6 +106,9 @@ export default function GroupLobbyPage() {
     setStartLoading(true);
     try {
       const nextStatus = room.mode === 'vote' ? 'voting' : 'random_playing';
+      if (room.mode === 'vote') {
+        await setVoteStartedAt(roomId);
+      }
       await updateRoomStatus(roomId, nextStatus);
     } catch {
       showToast('시작에 실패했습니다');

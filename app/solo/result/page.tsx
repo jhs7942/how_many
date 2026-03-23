@@ -7,6 +7,7 @@ import PageLayout from '@/components/PageLayout';
 import Toast, { useToast } from '@/components/Toast';
 import { session } from '@/lib/session';
 import { copyToClipboard } from '@/lib/utils';
+import { sendKakaoMessage } from '@/lib/kakao';
 
 const ACTIVITY_TIPS: Record<string, string> = {
   '카페': '☕ 조용한 분위기에서 대화를 나눠보세요',
@@ -42,8 +43,23 @@ export default function SoloResultPage() {
       showToast('공유 링크를 만들 수 없어요 😢');
       return;
     }
+    try {
+      const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
+      await Haptics.impact({ style: ImpactStyle.Light });
+    } catch { /* 웹 환경 무시 */ }
     await copyToClipboard(`${window.location.origin}/result/${resultId}`);
     showToast('공유 링크가 복사됐어요! 📋');
+  };
+
+  const handleKakaoShare = () => {
+    if (!activity || !resultId) return;
+    const linkUrl = `${window.location.origin}/result/${resultId}`;
+    sendKakaoMessage({
+      title: `오늘의 활동: ${activity.emoji} ${activity.label}`,
+      description: '몇명이니로 결정했어요! 같이 해볼까요?',
+      linkUrl,
+      buttonText: '결과 보기',
+    });
   };
 
   const handleMapSearch = (service: 'kakao' | 'naver') => {
@@ -137,24 +153,44 @@ export default function SoloResultPage() {
 
         {/* 버튼 영역 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 'auto', paddingTop: 16 }}>
-          <button
-            data-testid="btn-share"
-            onClick={handleShare}
-            style={{
-              width: '100%',
-              padding: '15px',
-              borderRadius: 14,
-              background: 'var(--color-primary)',
-              color: '#fff',
-              fontSize: 16,
-              fontWeight: 800,
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: 'var(--shadow-lg)',
-            }}
-          >
-            결과 공유하기 📤
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              data-testid="btn-share"
+              onClick={handleShare}
+              style={{
+                flex: 1,
+                padding: '15px',
+                borderRadius: 14,
+                background: 'var(--color-primary)',
+                color: '#fff',
+                fontSize: 15,
+                fontWeight: 800,
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: 'var(--shadow-lg)',
+              }}
+            >
+              링크 복사 📤
+            </button>
+            <button
+              data-testid="btn-kakao-share"
+              onClick={handleKakaoShare}
+              style={{
+                flex: 1,
+                padding: '15px',
+                borderRadius: 14,
+                background: '#FEE500',
+                color: '#191919',
+                fontSize: 15,
+                fontWeight: 800,
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: 'var(--shadow-lg)',
+              }}
+            >
+              카카오 공유 💬
+            </button>
+          </div>
           <button
             data-testid="btn-retry"
             onClick={() => router.push('/solo/random')}

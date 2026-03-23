@@ -12,6 +12,7 @@ export interface Room {
   location: string | null;
   time_limit: number;
   status: RoomStatus;
+  vote_started_at: string | null;
   created_at: string;
 }
 

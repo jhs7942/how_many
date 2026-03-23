@@ -91,7 +91,7 @@ export default function CandidateEditor({
               padding: '10px 14px',
               borderRadius: 12,
               border: '1.5px solid var(--color-border)',
-              fontSize: 15,
+              fontSize: 16,
               background: '#fff',
               color: 'var(--color-text)',
               outline: 'none',
@@ -108,6 +108,7 @@ export default function CandidateEditor({
               color: input.trim() ? '#fff' : '#aaa',
               fontWeight: 700,
               fontSize: 15,
+              minWidth: 60,
               cursor: input.trim() ? 'pointer' : 'not-allowed',
             }}
           >

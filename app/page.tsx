@@ -61,7 +61,7 @@ export default function HomePage() {
       {homeVisible && (
         <div
           style={{
-            minHeight: '100dvh',
+            minHeight: '100svh',
             display: 'flex',
             flexDirection: 'column',
             padding: '0 20px 40px',

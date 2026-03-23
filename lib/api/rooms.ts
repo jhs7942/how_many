@@ -82,6 +82,14 @@ export async function updateRoomStatus(roomId: string, status: Room['status']): 
   if (error) throw error;
 }
 
+export async function setVoteStartedAt(roomId: string): Promise<void> {
+  const { error } = await getSupabase()
+    .from('rooms')
+    .update({ vote_started_at: new Date().toISOString() })
+    .eq('id', roomId);
+  if (error) throw error;
+}
+
 export async function joinRoom(
   roomId: string,
   nickname: string,

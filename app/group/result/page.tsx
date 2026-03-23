@@ -6,6 +6,7 @@ import PageLayout from '@/components/PageLayout';
 import Toast, { useToast } from '@/components/Toast';
 import { session } from '@/lib/session';
 import { copyToClipboard } from '@/lib/utils';
+import { sendKakaoMessage } from '@/lib/kakao';
 import { getResultByRoomId } from '@/lib/api/results';
 import { getRoomCandidates } from '@/lib/api/rooms';
 import type { Result, RoomCandidate } from '@/lib/types';
@@ -56,6 +57,17 @@ export default function GroupResultPage() {
     showToast('공유 링크가 복사됐어요! 📤');
   }
 
+  function handleKakaoShare() {
+    if (!result) return;
+    const linkUrl = `${window.location.origin}/result/${result.id}`;
+    sendKakaoMessage({
+      title: `우리의 선택: ${result.winner_emoji} ${result.winner_label}`,
+      description: '몇명이니로 결정했어요! 같이 해볼까요?',
+      linkUrl,
+      buttonText: '결과 보기',
+    });
+  }
+
   if (!result) {
     return (
       <PageLayout>
@@ -73,6 +85,23 @@ export default function GroupResultPage() {
   const rankedCandidates = [...candidates].sort((a, b) =>
     (voteSummary[b.id] ?? 0) - (voteSummary[a.id] ?? 0)
   );
+
+  // 카테고리별 분류 ("카테고리:항목명" 패턴 파싱)
+  function parseCategory(label: string): { category: string | null; name: string } {
+    const idx = label.indexOf(':');
+    if (idx === -1) return { category: null, name: label };
+    return { category: label.slice(0, idx).trim(), name: label.slice(idx + 1).trim() };
+  }
+  const hasCategories = rankedCandidates.some((c) => c.label.includes(':'));
+  const categoryGroups: Record<string, typeof rankedCandidates> = {};
+  if (hasCategories) {
+    for (const c of rankedCandidates) {
+      const { category } = parseCategory(c.label);
+      const key = category ?? '기타';
+      if (!categoryGroups[key]) categoryGroups[key] = [];
+      categoryGroups[key].push(c);
+    }
+  }
 
   return (
     <PageLayout>
@@ -115,60 +144,123 @@ export default function GroupResultPage() {
           )}
         </div>
 
-        {/* 투표 방식일 때 바 그래프 */}
+        {/* 투표 방식일 때 바 그래프 (카테고리 분류 또는 전체 목록) */}
         {result.method === 'vote' && rankedCandidates.length > 0 && (
           <div style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: 'var(--shadow)' }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: '#888', marginBottom: 16 }}>📊 전체 득표 현황</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {rankedCandidates.map((c, i) => {
-                const votes = voteSummary[c.id] ?? 0;
-                const percent = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
-                const isWinner = c.label === result.winner_label;
-                return (
-                  <div key={c.id}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)' }}>
-                        {isWinner && '🥇 '}{c.emoji} {c.label}
-                      </span>
-                      <span style={{ fontSize: 13, color: '#888' }}>{votes}표</span>
+            {hasCategories ? (
+              // 카테고리별 그룹핑 표시
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {Object.entries(categoryGroups).map(([category, items]) => (
+                  <div key={category}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-primary)', marginBottom: 10, textTransform: 'uppercase' }}>
+                      {category}
                     </div>
-                    <div style={{ height: 10, background: '#eee', borderRadius: 5, overflow: 'hidden' }}>
-                      <div
-                        style={{
-                          height: '100%',
-                          background: isWinner ? 'var(--color-primary)' : 'var(--color-accent)',
-                          borderRadius: 5,
-                          width: animateBars ? `${percent}%` : '0%',
-                          transition: `width 0.8s ease ${i * 0.1}s`,
-                        }}
-                      />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {items.map((c, i) => {
+                        const votes = voteSummary[c.id] ?? 0;
+                        const percent = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
+                        const isWinner = c.label === result.winner_label;
+                        const { name } = parseCategory(c.label);
+                        return (
+                          <div key={c.id}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)' }}>
+                                {isWinner && '🥇 '}{c.emoji} {name}
+                              </span>
+                              <span style={{ fontSize: 13, color: '#888' }}>{votes}표</span>
+                            </div>
+                            <div style={{ height: 10, background: '#eee', borderRadius: 5, overflow: 'hidden' }}>
+                              <div
+                                style={{
+                                  height: '100%',
+                                  background: isWinner ? 'var(--color-primary)' : 'var(--color-accent)',
+                                  borderRadius: 5,
+                                  width: animateBars ? `${percent}%` : '0%',
+                                  transition: `width 0.8s ease ${i * 0.1}s`,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            ) : (
+              // 기존 단순 목록
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {rankedCandidates.map((c, i) => {
+                  const votes = voteSummary[c.id] ?? 0;
+                  const percent = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
+                  const isWinner = c.label === result.winner_label;
+                  return (
+                    <div key={c.id}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)' }}>
+                          {isWinner && '🥇 '}{c.emoji} {c.label}
+                        </span>
+                        <span style={{ fontSize: 13, color: '#888' }}>{votes}표</span>
+                      </div>
+                      <div style={{ height: 10, background: '#eee', borderRadius: 5, overflow: 'hidden' }}>
+                        <div
+                          style={{
+                            height: '100%',
+                            background: isWinner ? 'var(--color-primary)' : 'var(--color-accent)',
+                            borderRadius: 5,
+                            width: animateBars ? `${percent}%` : '0%',
+                            transition: `width 0.8s ease ${i * 0.1}s`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingBottom: 8 }}>
-          <button
-            data-testid="btn-share"
-            onClick={handleShare}
-            style={{
-              width: '100%',
-              padding: '15px',
-              borderRadius: 14,
-              border: 'none',
-              background: 'var(--color-primary)',
-              color: '#fff',
-              fontWeight: 800,
-              fontSize: 16,
-              cursor: 'pointer',
-              boxShadow: 'var(--shadow-lg)',
-            }}
-          >
-            결과 공유하기 📤
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              data-testid="btn-share"
+              onClick={handleShare}
+              style={{
+                flex: 1,
+                padding: '15px',
+                borderRadius: 14,
+                border: 'none',
+                background: 'var(--color-primary)',
+                color: '#fff',
+                fontWeight: 800,
+                fontSize: 15,
+                cursor: 'pointer',
+                boxShadow: 'var(--shadow-lg)',
+              }}
+            >
+              링크 복사 📤
+            </button>
+            <button
+              data-testid="btn-kakao-share"
+              onClick={handleKakaoShare}
+              style={{
+                flex: 1,
+                padding: '15px',
+                borderRadius: 14,
+                border: 'none',
+                background: '#FEE500',
+                color: '#191919',
+                fontWeight: 800,
+                fontSize: 15,
+                cursor: 'pointer',
+                boxShadow: 'var(--shadow-lg)',
+              }}
+            >
+              카카오 공유 💬
+            </button>
+          </div>
           <button
             data-testid="btn-home"
             onClick={() => router.push('/')}

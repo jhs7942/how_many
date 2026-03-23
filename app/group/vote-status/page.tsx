@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { useVoteTimer } from '@/lib/hooks/useVoteTimer';
 import { useRouter } from 'next/navigation';
 import PageLayout from '@/components/PageLayout';
 import { session } from '@/lib/session';
@@ -24,11 +25,12 @@ export default function GroupVoteStatusPage() {
   const [candidates, setCandidates] = useState<RoomCandidate[]>([]);
   const [isHost, setIsHost] = useState(false);
   const [myParticipantId, setMyParticipantId] = useState<string | null>(null);
-  const [timeLeft, setTimeLeft] = useState(300);
+  const [timeLimit, setTimeLimit] = useState(300);
   const [closing, setClosing] = useState(false);
   const lastSeenTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const closedRef = useRef(false);
+
+  const { timeLeft, startTimer } = useVoteTimer(roomId, isHost, timeLimit);
 
   const voteStatus = useVoteStatus(roomId);
   const roomSub = useRoomSubscription(roomId);
@@ -68,7 +70,7 @@ export default function GroupVoteStatusPage() {
       setCandidates(cands);
       setIsHost(room.host_client_id === clientId);
       setMyParticipantId(participant.id);
-      setTimeLeft(room.time_limit);
+      setTimeLimit(room.time_limit);
     }
     init();
   }, [router]);
@@ -82,20 +84,12 @@ export default function GroupVoteStatusPage() {
     return () => { if (lastSeenTimerRef.current) clearInterval(lastSeenTimerRef.current); };
   }, [myParticipantId]);
 
-  // 타이머
+  // 방장: 투표 화면 진입 시 타이머 시작
   useEffect(() => {
-    if (!roomId) return;
-    timerRef.current = setInterval(() => {
-      setTimeLeft((t) => {
-        if (t <= 1) {
-          clearInterval(timerRef.current!);
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [roomId]);
+    if (!roomId || !isHost) return;
+    startTimer();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId, isHost]);
 
   const closeVoting = useCallback(async () => {
     if (closedRef.current || !roomId || !candidates.length) return;

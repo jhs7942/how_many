@@ -48,3 +48,9 @@ meeting/
 e2e/
 supabase/
 playwright.config.ts
+
+# Capacitor Android 빌드 아티팩트
+android/app/build/
+android/.gradle/
+android/local.properties
+*.keystore
