@@ -64,6 +64,37 @@ npm run start    # 빌드 후 프로덕션 서버 실행
 - 디자인 토큰: `var(--color-primary)` `#FF7A3D` (주황), `var(--color-bg)` `#FFF7F2`, `var(--color-text)` `#2E2E2E`
 - 최대 너비 `430px` (body에 고정), 모바일 앱 형태
 
+## 배포 설정
+
+### Vercel
+- **운영 URL**: `https://how-many-mauve.vercel.app`
+- **개인정보처리방침**: `https://how-many-mauve.vercel.app/privacy`
+- **Vercel 프로젝트**: `jhs7942s-projects/how_many`
+- **배포 방법**: `git push origin main` → GitHub 연동으로 자동 배포
+  - `vercel --prod` CLI 직접 배포는 이 프로젝트에서 동작하지 않음
+  - GitHub 푸시만 사용할 것
+- **제외 파일**: `.vercelignore`에 `android/`, `test-results/`, `script.md` 포함
+
+### Android (Capacitor)
+- **앱 ID**: `com.howmany.app`
+- **앱 이름**: 몇명이니
+- **빌드 명령어**:
+  ```bash
+  npm run build:android          # Next.js static export + cap sync
+  cd android && JAVA_HOME=/Applications/Android\ Studio.app/Contents/jbr/Contents/Home ./gradlew bundleRelease
+  ```
+- **AAB 출력 경로**: `android/app/build/outputs/bundle/release/app-release.aab`
+- **키스토어**: `android/howmany-release.keystore` (git 제외, 별도 백업 필요)
+- **키 정보**: `android/key.properties` (git 제외, 별도 백업 필요)
+
+### Git
+- **저장소**: `https://github.com/jhs7942/how_many`
+- **기본 브랜치**: `main`
+- **주요 gitignore 항목**:
+  - `android/howmany-release.keystore` — 릴리스 서명 키 (분실 시 앱 업데이트 불가)
+  - `android/key.properties` — 키스토어 비밀번호
+  - `android/app/src/main/assets/public` — Capacitor 웹 에셋 (빌드 시 자동 생성)
+
 ## ⚡ ECC 스킬 활용 규칙
 다음 상황 발생 시 해당 스킬을 자동으로 적용한다:
 
