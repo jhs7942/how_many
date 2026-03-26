@@ -67,6 +67,10 @@ export default function GroupVotePage() {
       showToast('투표할 항목을 선택해주세요');
       return;
     }
+    try {
+      const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
+      await Haptics.impact({ style: ImpactStyle.Light });
+    } catch { /* 웹 환경 무시 */ }
     setLoading(true);
     try {
       await castVote(roomId, myParticipant.id, selected);

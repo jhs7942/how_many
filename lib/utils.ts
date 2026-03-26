@@ -29,18 +29,23 @@ export function pickGameType(count: number): 'spin' | 'shuffle' | 'slot' | 'rope
   return 'rope';
 }
 
-// 클립보드 복사
+// 클립보드 복사 (Capacitor 네이티브 우선, 웹 폴백)
 export async function copyToClipboard(text: string): Promise<void> {
   try {
-    await navigator.clipboard.writeText(text);
+    const { Clipboard } = await import('@capacitor/clipboard');
+    await Clipboard.write({ string: text });
   } catch {
-    const el = document.createElement('textarea');
-    el.value = text;
-    el.style.position = 'fixed';
-    el.style.opacity = '0';
-    document.body.appendChild(el);
-    el.select();
-    document.execCommand('copy');
-    document.body.removeChild(el);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const el = document.createElement('textarea');
+      el.value = text;
+      el.style.position = 'fixed';
+      el.style.opacity = '0';
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    }
   }
 }

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">몇명이니</string>
+    <string name="title_activity_main">몇명이니</string>
+    <string name="package_name">com.howmany.app</string>
+    <string name="custom_url_scheme">com.howmany.app</string>
+</resources>

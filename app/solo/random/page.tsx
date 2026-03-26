@@ -59,8 +59,12 @@ export default function SoloRandomPage() {
     router.push('/solo/result');
   }
 
-  function handleSpin() {
+  async function handleSpin() {
     if (isSpinning || done) return;
+    try {
+      const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
+      await Haptics.impact({ style: ImpactStyle.Light });
+    } catch { /* 웹 환경 무시 */ }
     setIsSpinning(true);
     spinRef.current?.spin();
   }
