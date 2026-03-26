@@ -101,7 +101,7 @@ export default function PrivacyPage() {
             개인정보 관련 문의사항이 있으시면 아래로 연락해 주세요.
           </p>
           <p style={{ marginTop: 8 }}>
-            <strong>이메일:</strong> howmany.app.help@gmail.com
+            <strong>이메일:</strong> saver7942@gmail.com
           </p>
         </Section>
       </div>
