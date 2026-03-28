@@ -68,6 +68,16 @@ export default function GroupResultPage() {
     });
   }
 
+  function handleMapSearch(service: 'kakao' | 'naver') {
+    if (!result) return;
+    const query = result.winner_label;
+    if (service === 'kakao') {
+      window.open(`https://map.kakao.com/?q=${encodeURIComponent(query)}`);
+    } else {
+      window.open(`https://map.naver.com/v5/search/${encodeURIComponent(query)}`);
+    }
+  }
+
   if (!result) {
     return (
       <PageLayout>
@@ -221,6 +231,44 @@ export default function GroupResultPage() {
             )}
           </div>
         )}
+
+        {/* 지도 버튼 */}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            data-testid="btn-map-kakao"
+            onClick={() => handleMapSearch('kakao')}
+            style={{
+              flex: 1,
+              padding: '12px',
+              borderRadius: 12,
+              border: '1.5px solid var(--color-border)',
+              background: '#fff',
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+              color: 'var(--color-text)',
+            }}
+          >
+            카카오지도 🗺️
+          </button>
+          <button
+            data-testid="btn-map-naver"
+            onClick={() => handleMapSearch('naver')}
+            style={{
+              flex: 1,
+              padding: '12px',
+              borderRadius: 12,
+              border: '1.5px solid var(--color-border)',
+              background: '#fff',
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+              color: 'var(--color-text)',
+            }}
+          >
+            네이버지도 🗺️
+          </button>
+        </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingBottom: 8 }}>
           <div style={{ display: 'flex', gap: 8 }}>
