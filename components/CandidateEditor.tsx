@@ -95,6 +95,7 @@ export default function CandidateEditor({
             placeholder="후보 추가..."
             style={{
               flex: 1,
+              minWidth: 0,
               padding: '10px 14px',
               borderRadius: 12,
               border: '1.5px solid var(--color-border)',

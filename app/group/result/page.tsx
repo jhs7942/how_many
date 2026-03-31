@@ -121,7 +121,7 @@ export default function GroupResultPage() {
         </span>
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16, overflowY: 'auto', overflowX: 'hidden' }}>
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16, overflowY: 'auto', overflowX: 'clip' }}>
         {/* 위너 카드 */}
         <div
           data-testid="result-card"

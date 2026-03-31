@@ -104,7 +104,7 @@ export default function GroupCreatePage() {
         </span>
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 24, overflowY: 'auto', overflowX: 'hidden' }}>
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 24, overflowY: 'auto', overflowX: 'clip' }}>
         {/* 후보 설정 방식 */}
         <div>
           <p style={{ fontSize: 14, fontWeight: 700, color: '#888', marginBottom: 10 }}>후보 설정 방식</p>
