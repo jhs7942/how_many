@@ -33,8 +33,8 @@ export function pickGameType(count: number): 'spin' | 'shuffle' | 'slot' | 'rope
 export function getAppBaseUrl(): string {
   if (typeof window === 'undefined') return process.env.NEXT_PUBLIC_APP_URL ?? '';
   const origin = window.location.origin;
-  // Capacitor: 'http://localhost' (포트 없음) 또는 'capacitor://localhost'
-  if (origin === 'http://localhost' || origin.startsWith('capacitor://')) {
+  // Capacitor: 'http(s)://localhost' (포트 없음) 또는 'capacitor://localhost'
+  if (/^https?:\/\/localhost$/.test(origin) || origin.startsWith('capacitor://')) {
     return process.env.NEXT_PUBLIC_APP_URL ?? 'https://how-many-mauve.vercel.app';
   }
   return origin;

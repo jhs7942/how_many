@@ -57,10 +57,10 @@ export default function GroupResultPage() {
     showToast('공유 링크가 복사됐어요! 📤');
   }
 
-  function handleKakaoShare() {
+  async function handleKakaoShare() {
     if (!result) return;
     const linkUrl = `${getAppBaseUrl()}/result/${result.id}`;
-    sendKakaoMessage({
+    await sendKakaoMessage({
       title: `우리의 선택: ${result.winner_emoji} ${result.winner_label}`,
       description: '몇명이니로 결정했어요! 같이 해볼까요?',
       linkUrl,

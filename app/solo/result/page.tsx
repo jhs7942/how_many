@@ -41,10 +41,10 @@ export default function SoloResultPage() {
     showToast('공유 링크가 복사됐어요! 📋');
   };
 
-  const handleKakaoShare = () => {
+  const handleKakaoShare = async () => {
     if (!activity || !resultId) return;
     const linkUrl = `${getAppBaseUrl()}/result/${resultId}`;
-    sendKakaoMessage({
+    await sendKakaoMessage({
       title: `오늘의 활동: ${activity.emoji} ${activity.label}`,
       description: '몇명이니로 결정했어요! 같이 해볼까요?',
       linkUrl,
