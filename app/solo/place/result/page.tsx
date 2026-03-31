@@ -6,7 +6,7 @@ import BackButton from '@/components/BackButton';
 import PageLayout from '@/components/PageLayout';
 import Toast, { useToast } from '@/components/Toast';
 import { session } from '@/lib/session';
-import { copyToClipboard } from '@/lib/utils';
+import { copyToClipboard, getAppBaseUrl } from '@/lib/utils';
 
 export default function SoloPlaceResultPage() {
   const router = useRouter();
@@ -33,7 +33,7 @@ export default function SoloPlaceResultPage() {
       showToast('공유 링크를 만들 수 없어요 😢');
       return;
     }
-    await copyToClipboard(`${window.location.origin}/result/${placeResultId}`);
+    await copyToClipboard(`${getAppBaseUrl()}/result/${placeResultId}`);
     showToast('공유 링크가 복사됐어요! 📋');
   };
 

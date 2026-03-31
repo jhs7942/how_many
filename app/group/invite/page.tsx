@@ -6,7 +6,7 @@ import BackButton from '@/components/BackButton';
 import PageLayout from '@/components/PageLayout';
 import Toast, { useToast } from '@/components/Toast';
 import { session } from '@/lib/session';
-import { copyToClipboard } from '@/lib/utils';
+import { copyToClipboard, getAppBaseUrl } from '@/lib/utils';
 
 export default function GroupInvitePage() {
   const router = useRouter();
@@ -31,14 +31,14 @@ export default function GroupInvitePage() {
   };
 
   const handleCopyLink = async () => {
-    const link = `${window.location.origin}/group/nickname?code=${roomCode}`;
+    const link = `${getAppBaseUrl()}/group/nickname?code=${roomCode}`;
     await copyToClipboard(link);
     showToast('초대 링크가 복사되었어요! 🔗');
   };
 
   const handleCopyAll = async () => {
     const candidateText = candidates.map(c => `${c.emoji} ${c.label}`).join(', ');
-    const link = `${window.location.origin}/group/nickname?code=${roomCode}`;
+    const link = `${getAppBaseUrl()}/group/nickname?code=${roomCode}`;
     const text = `[몇명이니] 투표에 참여해주세요!\n방 코드: ${roomCode}\n후보: ${candidateText}\n링크: ${link}`;
     await copyToClipboard(text);
     showToast('초대 메시지가 복사되었어요! 📤');

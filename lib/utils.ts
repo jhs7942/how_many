@@ -29,6 +29,17 @@ export function pickGameType(count: number): 'spin' | 'shuffle' | 'slot' | 'rope
   return 'rope';
 }
 
+// 앱 베이스 URL 반환 — Capacitor 앱은 localhost로 서빙되므로 배포 URL로 대체
+export function getAppBaseUrl(): string {
+  if (typeof window === 'undefined') return process.env.NEXT_PUBLIC_APP_URL ?? '';
+  const origin = window.location.origin;
+  // Capacitor: 'http://localhost' (포트 없음) 또는 'capacitor://localhost'
+  if (origin === 'http://localhost' || origin.startsWith('capacitor://')) {
+    return process.env.NEXT_PUBLIC_APP_URL ?? 'https://how-many-mauve.vercel.app';
+  }
+  return origin;
+}
+
 // 클립보드 복사 (Capacitor 네이티브 우선, 웹 폴백)
 export async function copyToClipboard(text: string): Promise<void> {
   try {

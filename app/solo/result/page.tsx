@@ -6,7 +6,7 @@ import BackButton from '@/components/BackButton';
 import PageLayout from '@/components/PageLayout';
 import Toast, { useToast } from '@/components/Toast';
 import { session } from '@/lib/session';
-import { copyToClipboard } from '@/lib/utils';
+import { copyToClipboard, getAppBaseUrl } from '@/lib/utils';
 import { sendKakaoMessage } from '@/lib/kakao';
 import tipsJson from '@/assets/data/tips.json';
 
@@ -37,13 +37,13 @@ export default function SoloResultPage() {
       const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
       await Haptics.impact({ style: ImpactStyle.Light });
     } catch { /* 웹 환경 무시 */ }
-    await copyToClipboard(`${window.location.origin}/result/${resultId}`);
+    await copyToClipboard(`${getAppBaseUrl()}/result/${resultId}`);
     showToast('공유 링크가 복사됐어요! 📋');
   };
 
   const handleKakaoShare = () => {
     if (!activity || !resultId) return;
-    const linkUrl = `${window.location.origin}/result/${resultId}`;
+    const linkUrl = `${getAppBaseUrl()}/result/${resultId}`;
     sendKakaoMessage({
       title: `오늘의 활동: ${activity.emoji} ${activity.label}`,
       description: '몇명이니로 결정했어요! 같이 해볼까요?',

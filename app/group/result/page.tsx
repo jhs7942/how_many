@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import PageLayout from '@/components/PageLayout';
 import Toast, { useToast } from '@/components/Toast';
 import { session } from '@/lib/session';
-import { copyToClipboard } from '@/lib/utils';
+import { copyToClipboard, getAppBaseUrl } from '@/lib/utils';
 import { sendKakaoMessage } from '@/lib/kakao';
 import { getResultByRoomId } from '@/lib/api/results';
 import { getRoomCandidates } from '@/lib/api/rooms';
@@ -53,13 +53,13 @@ export default function GroupResultPage() {
 
   async function handleShare() {
     if (!result) return;
-    await copyToClipboard(`${window.location.origin}/result/${result.id}`);
+    await copyToClipboard(`${getAppBaseUrl()}/result/${result.id}`);
     showToast('공유 링크가 복사됐어요! 📤');
   }
 
   function handleKakaoShare() {
     if (!result) return;
-    const linkUrl = `${window.location.origin}/result/${result.id}`;
+    const linkUrl = `${getAppBaseUrl()}/result/${result.id}`;
     sendKakaoMessage({
       title: `우리의 선택: ${result.winner_emoji} ${result.winner_label}`,
       description: '몇명이니로 결정했어요! 같이 해볼까요?',
