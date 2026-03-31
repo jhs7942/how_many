@@ -95,7 +95,10 @@ export default function GroupVotePage() {
         )}
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 20, overflowY: 'auto', overflowX: 'clip' }}>
+      <div
+        onScroll={(e) => { if (e.currentTarget.scrollLeft !== 0) e.currentTarget.scrollLeft = 0; }}
+        style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 20, overflowY: 'auto', overflowX: 'hidden', maxWidth: 'calc(100vw - 40px)' }}
+      >
         {candidates.map((c) => (
           <button
             key={c.id}

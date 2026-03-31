@@ -104,7 +104,10 @@ export default function GroupCreatePage() {
         </span>
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 24, overflowY: 'auto', overflowX: 'clip' }}>
+      <div
+        onScroll={(e) => { if (e.currentTarget.scrollLeft !== 0) e.currentTarget.scrollLeft = 0; }}
+        style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 24, overflowY: 'auto', overflowX: 'hidden', maxWidth: 'calc(100vw - 40px)' }}
+      >
         {/* 후보 설정 방식 */}
         <div>
           <p style={{ fontSize: 14, fontWeight: 700, color: '#888', marginBottom: 10 }}>후보 설정 방식</p>

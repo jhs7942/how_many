@@ -121,7 +121,10 @@ export default function GroupResultPage() {
         </span>
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16, overflowY: 'auto', overflowX: 'clip' }}>
+      <div
+        onScroll={(e) => { if (e.currentTarget.scrollLeft !== 0) e.currentTarget.scrollLeft = 0; }}
+        style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16, overflowY: 'auto', overflowX: 'hidden', maxWidth: 'calc(100vw - 40px)' }}
+      >
         {/* 위너 카드 */}
         <div
           data-testid="result-card"

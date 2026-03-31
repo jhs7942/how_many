@@ -86,7 +86,7 @@ export default function CandidateEditor({
 
       {/* 입력 */}
       {candidates.length < maxCount && (
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, overflow: 'hidden' }}>
           <input
             ref={inputRef}
             value={input}
