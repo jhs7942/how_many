@@ -70,10 +70,14 @@ export default function SoloResultPage() {
     <PageLayout>
       <div style={{ display: 'flex', alignItems: 'center', padding: '16px 0', gap: 12, minHeight: 56 }}>
         <BackButton href="/solo/random" />
-        <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>활동 결정 완료!</span>
       </div>
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {/* 타이틀 */}
+        <div style={{ textAlign: 'center', paddingBottom: 4 }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--color-text)' }}>🎉 활동 결정 완료!</div>
+        </div>
+
         {/* 결과 카드 */}
         <div
           data-testid="result-card"
@@ -142,7 +146,7 @@ export default function SoloResultPage() {
         )}
 
         {/* 버튼 영역 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 'auto', paddingTop: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 24, paddingTop: 8 }}>
           <div style={{ display: 'flex', gap: 8 }}>
             <button
               data-testid="btn-share"

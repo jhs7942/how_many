@@ -119,9 +119,10 @@ export default function ContentShuffle({
   const CUP_W = Math.min(72, Math.floor(360 / n) - 8);
   const CUP_H = CUP_W * 1.2;
   const containerWidth = n * CUP_W + (n - 1) * gap;
+  const LIFT_H = Math.ceil(CUP_H * 0.65); // 컵 들어올림 여백 (텍스트 겹침 방지)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 }}>
       {/* 게임 상태 메시지 */}
       <p style={{ fontSize: 15, color: 'var(--color-text)', fontWeight: 600, minHeight: 22 }}>
         {gameState === 'showing' && '👀 위치를 잘 기억하세요!'}
@@ -135,7 +136,7 @@ export default function ContentShuffle({
       <div
         style={{
           position: 'relative',
-          height: CUP_H + 50,
+          height: CUP_H + 50 + LIFT_H,
           width: containerWidth,
         }}
       >
@@ -154,7 +155,7 @@ export default function ContentShuffle({
               style={{
                 position: 'absolute',
                 left: screenPos * (CUP_W + gap),
-                top: 0,
+                top: LIFT_H,
                 width: CUP_W,
                 display: 'flex',
                 flexDirection: 'column',

@@ -21,11 +21,18 @@ export default function CandidateEditor({
   maxCount = 8,
 }: CandidateEditorProps) {
   const [input, setInput] = useState('');
+  const [duplicateWarning, setDuplicateWarning] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   function addCandidate() {
     const label = input.trim();
     if (!label || candidates.length >= maxCount) return;
+    if (candidates.some((c) => c.label === label)) {
+      setDuplicateWarning(true);
+      setTimeout(() => setDuplicateWarning(false), 2000);
+      return;
+    }
+    setDuplicateWarning(false);
     const emoji = EMOJIS[candidates.length % EMOJIS.length];
     onChange([...candidates, { label, emoji }]);
     setInput('');
@@ -117,9 +124,14 @@ export default function CandidateEditor({
         </div>
       )}
 
-      <p style={{ fontSize: 13, color: '#888', textAlign: 'right' }}>
-        {candidates.length}/{maxCount}
-      </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {duplicateWarning ? (
+          <p style={{ fontSize: 12, color: 'var(--color-primary)', fontWeight: 600 }}>이미 추가된 항목이에요!</p>
+        ) : (
+          <span />
+        )}
+        <p style={{ fontSize: 13, color: '#888' }}>{candidates.length}/{maxCount}</p>
+      </div>
     </div>
   );
 }
