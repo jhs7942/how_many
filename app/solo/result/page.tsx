@@ -8,19 +8,9 @@ import Toast, { useToast } from '@/components/Toast';
 import { session } from '@/lib/session';
 import { copyToClipboard } from '@/lib/utils';
 import { sendKakaoMessage } from '@/lib/kakao';
+import tipsJson from '@/assets/data/tips.json';
 
-const ACTIVITY_TIPS: Record<string, string> = {
-  '카페': '☕ 조용한 분위기에서 대화를 나눠보세요',
-  '산책': '🌿 가까운 공원이나 강변을 걸어보세요',
-  '전시': '🎨 현재 특별 전시회를 먼저 확인해보세요',
-  '영화': '🎬 미리 좌석 예약을 추천해요',
-  '노래방': '🎤 코인노래방도 좋은 선택이에요',
-  '술집': '🍺 좋은 분위기의 이자카야 어때요?',
-  '보드게임': '🎲 보드게임 카페에서 다양한 게임을 즐기세요',
-  '방탈출': '🔐 예약 필수! 미리 체크해보세요',
-  '볼링': '🎳 볼링장 신발 사이즈도 미리 확인해두세요',
-  '고깃집': '🥩 예약이 필요한 곳은 미리 알아보세요',
-};
+const ACTIVITY_TIPS: Record<string, string> = tipsJson;
 
 export default function SoloResultPage() {
   const router = useRouter();
@@ -74,7 +64,7 @@ export default function SoloResultPage() {
 
   if (!activity) return null;
 
-  const tip = ACTIVITY_TIPS[activity.label] ?? '즐거운 시간 보내세요!';
+  const tip = ACTIVITY_TIPS[activity.label] ?? ACTIVITY_TIPS['default'];
 
   return (
     <PageLayout>

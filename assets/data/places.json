@@ -1,0 +1,170 @@
+{
+  "카페": [
+    { "label": "아늑한 카페", "emoji": "☕" },
+    { "label": "루프탑 카페", "emoji": "🏙️" },
+    { "label": "베이커리 카페", "emoji": "🥐" },
+    { "label": "북카페", "emoji": "📚" },
+    { "label": "디저트 카페", "emoji": "🍰" },
+    { "label": "대형 카페", "emoji": "🏢" },
+    { "label": "테마 카페", "emoji": "🎭" },
+    { "label": "공방 카페", "emoji": "🔨" },
+    { "label": "감성 카페", "emoji": "✨" }
+  ],
+  "산책": [
+    { "label": "도심 공원", "emoji": "🌳" },
+    { "label": "숲길", "emoji": "🌲" },
+    { "label": "야경 명소", "emoji": "✨" },
+    { "label": "둘레길", "emoji": "🗺️" },
+    { "label": "호수공원", "emoji": "🏞️" },
+    { "label": "강변 산책로", "emoji": "🌊" },
+    { "label": "전망대", "emoji": "🔭" }
+  ],
+  "전시": [
+    { "label": "미술관", "emoji": "🖼️" },
+    { "label": "갤러리", "emoji": "🎨" },
+    { "label": "팝업 전시", "emoji": "📸" },
+    { "label": "박물관", "emoji": "🏛️" },
+    { "label": "미디어아트 전시", "emoji": "💡" },
+    { "label": "체험형 전시관", "emoji": "🔬" },
+    { "label": "아트홀", "emoji": "🎭" },
+    { "label": "복합문화공간", "emoji": "🏠" }
+  ],
+  "영화": [
+    { "label": "멀티플렉스", "emoji": "🎬" },
+    { "label": "독립영화관", "emoji": "🎥" },
+    { "label": "4DX/IMAX", "emoji": "🌀" },
+    { "label": "드라이브인", "emoji": "🚗" },
+    { "label": "예술영화관", "emoji": "🎞️" },
+    { "label": "야외 상영", "emoji": "🌙" }
+  ],
+  "피크닉": [
+    { "label": "도시공원", "emoji": "🌳" },
+    { "label": "호수공원 피크닉존", "emoji": "🏞️" },
+    { "label": "잔디광장", "emoji": "🌿" },
+    { "label": "캠핑형 피크닉장", "emoji": "⛺" },
+    { "label": "잔디정원", "emoji": "🌱" },
+    { "label": "강가 둔치", "emoji": "🌊" },
+    { "label": "근교 자연휴양림", "emoji": "🌲" }
+  ],
+  "드라이브": [
+    { "label": "인근 외곽 국도", "emoji": "🛣️" },
+    { "label": "해안선 도로", "emoji": "🌊" },
+    { "label": "호수 한 바퀴", "emoji": "🏞️" },
+    { "label": "산복도로 야경 코스", "emoji": "🌃" },
+    { "label": "신도시 대로변", "emoji": "🏙️" }
+  ],
+  "드로잉카페": [
+    { "label": "드로잉 카페", "emoji": "✏️" },
+    { "label": "아트 카페", "emoji": "🎨" },
+    { "label": "컬러링 카페", "emoji": "🖍️" },
+    { "label": "크래프트 카페", "emoji": "✂️" },
+    { "label": "미술 체험 카페", "emoji": "🖌️" },
+    { "label": "캔버스 카페", "emoji": "🖼️" },
+    { "label": "창작 카페", "emoji": "💡" },
+    { "label": "취미 카페", "emoji": "🌟" }
+  ],
+  "맛집탐방": [
+    { "label": "로컬 맛집거리", "emoji": "🍜" },
+    { "label": "시장 먹거리", "emoji": "🛒" },
+    { "label": "골목 맛집", "emoji": "🍱" },
+    { "label": "푸드코트", "emoji": "🍽️" },
+    { "label": "미식 투어", "emoji": "⭐" },
+    { "label": "분식 거리", "emoji": "🍢" },
+    { "label": "야시장", "emoji": "🏮" },
+    { "label": "테마 맛집", "emoji": "🎪" }
+  ],
+  "술집": [
+    { "label": "포장마차", "emoji": "🏮" },
+    { "label": "이자카야", "emoji": "🍶" },
+    { "label": "와인바", "emoji": "🍷" },
+    { "label": "수제맥주 바", "emoji": "🍻" },
+    { "label": "하이볼 바", "emoji": "🥃" },
+    { "label": "칵테일 바", "emoji": "🍹" },
+    { "label": "펍", "emoji": "🍺" }
+  ],
+  "보드게임": [
+    { "label": "보드게임 카페", "emoji": "🎲" },
+    { "label": "방탈출 카페", "emoji": "🔐" },
+    { "label": "다트바", "emoji": "🎯" },
+    { "label": "추리카페", "emoji": "🔍" },
+    { "label": "테이블게임 바", "emoji": "♟️" },
+    { "label": "머더미스터리 카페", "emoji": "🕵️" },
+    { "label": "카드게임 라운지", "emoji": "🃏" }
+  ],
+  "방탈출": [
+    { "label": "공포 테마", "emoji": "👻" },
+    { "label": "추리 테마", "emoji": "🔍" },
+    { "label": "액션 테마", "emoji": "💥" },
+    { "label": "판타지 테마", "emoji": "🧙" },
+    { "label": "미스터리 방탈출", "emoji": "❓" },
+    { "label": "대형 방탈출", "emoji": "🏚️" },
+    { "label": "VR 방탈출", "emoji": "🥽" }
+  ],
+  "오락실": [
+    { "label": "레트로 오락실", "emoji": "👾" },
+    { "label": "메달 게임장", "emoji": "🪙" },
+    { "label": "멀티 오락실", "emoji": "🕹️" },
+    { "label": "농구 게임존", "emoji": "🏀" },
+    { "label": "리듬게임존", "emoji": "🎵" },
+    { "label": "VR 아케이드", "emoji": "🥽" },
+    { "label": "크레인 게임장", "emoji": "🎁" }
+  ],
+  "노래방": [
+    { "label": "코인 노래방", "emoji": "🪙" },
+    { "label": "일반 노래방", "emoji": "🎤" },
+    { "label": "프리미엄 룸", "emoji": "👑" },
+    { "label": "주점 노래방", "emoji": "🍺" },
+    { "label": "파티룸 노래방", "emoji": "🎉" },
+    { "label": "뮤직 라운지", "emoji": "🎶" }
+  ],
+  "고깃집": [
+    { "label": "삼겹살 집", "emoji": "🥓" },
+    { "label": "소고기 전문점", "emoji": "🥩" },
+    { "label": "양고기 구이", "emoji": "🍖" },
+    { "label": "닭갈비 집", "emoji": "🍗" },
+    { "label": "갈매기살 집", "emoji": "🔥" },
+    { "label": "숯불구이 전문점", "emoji": "🪨" },
+    { "label": "한우집", "emoji": "🐄" }
+  ],
+  "캠핑": [
+    { "label": "오토캠핑장", "emoji": "🚗" },
+    { "label": "글램핑", "emoji": "⛺" },
+    { "label": "바베큐 캠핑장", "emoji": "🔥" },
+    { "label": "데이캠프", "emoji": "☀️" },
+    { "label": "근교 캠핑존", "emoji": "🌲" },
+    { "label": "숲속 캠핑장", "emoji": "🌳" },
+    { "label": "카라반", "emoji": "🚌" },
+    { "label": "감성 캠핑장", "emoji": "🌟" }
+  ],
+  "테마파크": [
+    { "label": "대형 놀이공원", "emoji": "🎠" },
+    { "label": "실내 테마파크", "emoji": "🏟️" },
+    { "label": "액티비티 파크", "emoji": "🧗" },
+    { "label": "워터파크", "emoji": "💦" },
+    { "label": "어드벤처 파크", "emoji": "🌿" },
+    { "label": "야간 테마파크", "emoji": "🌙" },
+    { "label": "복합 놀이시설", "emoji": "🎪" }
+  ],
+  "바베큐": [
+    { "label": "야외 바베큐장", "emoji": "🔥" },
+    { "label": "글램핑 바베큐", "emoji": "⛺" },
+    { "label": "루프탑 바베큐", "emoji": "🏙️" },
+    { "label": "펜션 바베큐", "emoji": "🏡" },
+    { "label": "캠핑 바베큐", "emoji": "🌲" },
+    { "label": "테라스 바베큐", "emoji": "🌅" },
+    { "label": "숯불 바베큐장", "emoji": "🪨" }
+  ],
+  "대형관광지": [
+    { "label": "국립공원", "emoji": "🏔️" },
+    { "label": "지역 대표 호수공원", "emoji": "🏞️" },
+    { "label": "관광 특구 거리", "emoji": "🏙️" },
+    { "label": "대형 수목원", "emoji": "🌿" },
+    { "label": "케이블카 탑승지", "emoji": "🚡" }
+  ],
+  "볼링": [
+    { "label": "볼링장", "emoji": "🎳" },
+    { "label": "스크린 스포츠", "emoji": "🏆" },
+    { "label": "스포츠 복합관", "emoji": "⚽" },
+    { "label": "당구장", "emoji": "🎱" }
+  ]
+}

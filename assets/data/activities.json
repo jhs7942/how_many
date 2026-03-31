@@ -1,0 +1,45 @@
+{
+  "2": [
+    { "label": "카페", "emoji": "☕" },
+    { "label": "산책", "emoji": "🚶" },
+    { "label": "전시", "emoji": "🎨" },
+    { "label": "영화", "emoji": "🎬" },
+    { "label": "피크닉", "emoji": "🧺" },
+    { "label": "드라이브", "emoji": "🚗" },
+    { "label": "드로잉카페", "emoji": "🖌️" },
+    { "label": "맛집탐방", "emoji": "🍽️" }
+  ],
+  "3": [
+    { "label": "카페", "emoji": "☕" },
+    { "label": "술집", "emoji": "🍺" },
+    { "label": "보드게임", "emoji": "🎲" },
+    { "label": "드로잉카페", "emoji": "🖌️" },
+    { "label": "방탈출", "emoji": "🔐" },
+    { "label": "오락실", "emoji": "🕹️" }
+  ],
+  "4": [
+    { "label": "노래방", "emoji": "🎤" },
+    { "label": "보드게임", "emoji": "🎲" },
+    { "label": "방탈출", "emoji": "🔐" },
+    { "label": "피크닉", "emoji": "🧺" },
+    { "label": "오락실", "emoji": "🕹️" },
+    { "label": "맛집탐방", "emoji": "🍽️" }
+  ],
+  "5": [
+    { "label": "고깃집", "emoji": "🥩" },
+    { "label": "술집", "emoji": "🍺" },
+    { "label": "캠핑", "emoji": "⛺" },
+    { "label": "전시", "emoji": "🎨" },
+    { "label": "오락실", "emoji": "🕹️" },
+    { "label": "테마파크", "emoji": "🎢" },
+    { "label": "바베큐", "emoji": "🔥" }
+  ],
+  "6": [
+    { "label": "바베큐", "emoji": "🔥" },
+    { "label": "카페", "emoji": "☕" },
+    { "label": "테마파크", "emoji": "🎢" },
+    { "label": "캠핑", "emoji": "⛺" },
+    { "label": "오락실", "emoji": "🕹️" },
+    { "label": "대형관광지", "emoji": "🗺️" }
+  ]
+}

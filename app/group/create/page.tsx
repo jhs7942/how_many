@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import BackButton from '@/components/BackButton';
 import PageLayout from '@/components/PageLayout';
 import CandidateEditor, { type Candidate } from '@/components/CandidateEditor';
+import ActivityPresetPicker from '@/components/ActivityPresetPicker';
 import { session } from '@/lib/session';
 import { createRoom } from '@/lib/api/rooms';
-import { ACTIVITY_DATA } from '@/lib/data';
+import { ACTIVITY_DATA, ALL_ACTIVITIES, type ActivityItem } from '@/lib/data';
 
 const PEOPLE_OPTIONS = [
   { count: 2, emoji: '👫' },
@@ -46,6 +47,23 @@ export default function GroupCreatePage() {
       setCandidates(activities);
     }
   }, [preset, selectedPeople]);
+
+  const MAX_COUNT = 8;
+
+  // 인원기반: 해당 인원 활동 / 직접입력: 전체 활동
+  const presetActivities =
+    preset === 'default' && selectedPeople
+      ? ACTIVITY_DATA[selectedPeople] ?? ALL_ACTIVITIES
+      : ALL_ACTIVITIES;
+
+  function toggleActivity(activity: ActivityItem) {
+    const exists = candidates.some((c) => c.label === activity.label);
+    if (exists) {
+      setCandidates(candidates.filter((c) => c.label !== activity.label));
+    } else if (candidates.length < MAX_COUNT) {
+      setCandidates([...candidates, activity]);
+    }
+  }
 
   async function handleCreate() {
     if (preset === 'default' && !selectedPeople) {
@@ -142,12 +160,20 @@ export default function GroupCreatePage() {
           </div>
         )}
 
+        {/* 추천 활동 빠른 선택 */}
+        <ActivityPresetPicker
+          activities={presetActivities}
+          selected={candidates}
+          maxCount={MAX_COUNT}
+          onToggle={toggleActivity}
+        />
+
         {/* 후보 편집 */}
         <div>
           <p style={{ fontSize: 14, fontWeight: 700, color: '#888', marginBottom: 10 }}>
             후보 목록
           </p>
-          <CandidateEditor candidates={candidates} onChange={setCandidates} maxCount={8} />
+          <CandidateEditor candidates={candidates} onChange={setCandidates} maxCount={MAX_COUNT} />
         </div>
 
         {/* 위치 (선택) */}
