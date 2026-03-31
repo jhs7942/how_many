@@ -92,6 +92,10 @@ export default function CandidateEditor({
             value={input}
             onChange={(e) => setInput(e.target.value.slice(0, 12))}
             onKeyDown={(e) => e.key === 'Enter' && addCandidate()}
+            onFocus={() => {
+              let el: HTMLElement | null = inputRef.current;
+              while (el) { el.scrollLeft = 0; el = el.parentElement; }
+            }}
             placeholder="후보 추가..."
             style={{
               flex: 1,
@@ -109,14 +113,16 @@ export default function CandidateEditor({
             onClick={addCandidate}
             disabled={!input.trim()}
             style={{
-              padding: '10px 18px',
+              padding: '10px 12px',
               borderRadius: 12,
               border: 'none',
               background: input.trim() ? 'var(--color-primary)' : '#eee',
               color: input.trim() ? '#fff' : '#aaa',
               fontWeight: 700,
               fontSize: 15,
-              minWidth: 60,
+              minWidth: 52,
+              flexShrink: 0,
+              whiteSpace: 'nowrap',
               cursor: input.trim() ? 'pointer' : 'not-allowed',
             }}
           >
