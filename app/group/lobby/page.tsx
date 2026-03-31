@@ -164,7 +164,7 @@ export default function GroupLobbyPage() {
       </p>
 
       {/* 참여자 목록 */}
-      <div style={{ flex: 1, marginTop: 20, overflowY: 'auto' }}>
+      <div style={{ flex: 1, minHeight: 0, marginTop: 20, overflowY: 'auto', overflowX: 'hidden' }}>
         <p style={{ fontSize: 14, fontWeight: 700, color: '#888', marginBottom: 10 }}>
           참여자 {participants.length}명
         </p>

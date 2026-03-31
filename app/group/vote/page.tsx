@@ -95,7 +95,7 @@ export default function GroupVotePage() {
         )}
       </div>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 20, overflowY: 'auto' }}>
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 20, overflowY: 'auto', overflowX: 'hidden' }}>
         {candidates.map((c) => (
           <button
             key={c.id}
