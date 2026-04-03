@@ -48,6 +48,9 @@ e2e/
 supabase/
 playwright.config.ts
 
+# Claude Code 로컬 전용 파일 (심링크, 배포 환경에 없음)
+CLAUDE.local.md
+
 # Capacitor Android 빌드 아티팩트
 android/app/build/
 android/.gradle/
