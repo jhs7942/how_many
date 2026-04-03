@@ -42,7 +42,6 @@ next-env.d.ts
 .playwright-mcp/
 
 # 개발 내부 문서 및 도구 (배포 불필요)
-.claude/
 .backup/
 meeting/
 e2e/

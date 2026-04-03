@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/jeonghyeonseung/workspaces/how_many/**)",
+      "Bash(NEXT_STATIC_EXPORT=true npm run build)",
+      "Bash(npx cap:*)",
+      "Bash(./gradlew assembleDebug 2>&1)",
+      "Bash(java -version)",
+      "Read(//Library/Java/JavaVirtualMachines/**)",
+      "Read(//Users/jeonghyeonseung/Library/Java/**)",
+      "Bash(/usr/libexec/java_home -V)",
+      "Bash(export JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\")",
+      "Bash(./gradlew assembleDebug)",
+      "Bash(cat:*)",
+      "Bash(/Users/jeonghyeonseung/workspaces/how_many/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml:*)",
+      "Bash(__NEW_LINE_5e0b5bf388976497__ cat:*)",
+      "Bash(/Users/jeonghyeonseung/workspaces/how_many/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml:*)",
+      "Bash(__NEW_LINE_5e0b5bf388976497__ echo:*)",
+      "Bash(npm run:*)"
+    ]
+  }
+}
