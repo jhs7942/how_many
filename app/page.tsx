@@ -173,6 +173,33 @@ export default function HomePage() {
                   <div style={{ fontSize: 13, color: '#888' }}>친구 방에 코드로 입장</div>
                 </div>
               </Link>
+
+              {/* 구분선 */}
+              <div style={{ width: '100%', height: 1, background: 'var(--color-border)', margin: '8px 0' }} />
+
+              {/* 맛집 결정 */}
+              <Link
+                href="/food/setting"
+                style={{
+                  background: '#fff',
+                  borderRadius: 18,
+                  padding: '20px 20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
+                  boxShadow: 'var(--shadow)',
+                  border: '2px solid #FFE0CC',
+                  textDecoration: 'none',
+                }}
+              >
+                <span style={{ fontSize: 40 }}>🍽️</span>
+                <div>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-text)', marginBottom: 2 }}>
+                    맛집 결정
+                  </div>
+                  <div style={{ fontSize: 13, color: '#888' }}>오늘 뭐 먹지? 랜덤으로 정해요</div>
+                </div>
+              </Link>
             </div>
           </div>
 

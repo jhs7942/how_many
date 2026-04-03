@@ -1,0 +1,94 @@
+{
+  "한식": [
+    {"label": "김치찌개", "emoji": "🍲"},
+    {"label": "된장찌개", "emoji": "🫕"},
+    {"label": "비빔밥", "emoji": "🍚"},
+    {"label": "삼겹살", "emoji": "🥓"},
+    {"label": "냉면", "emoji": "🍜"},
+    {"label": "불고기", "emoji": "🥩"},
+    {"label": "제육볶음", "emoji": "🔥"},
+    {"label": "순대국", "emoji": "🍜"}
+  ],
+  "중식": [
+    {"label": "짜장면", "emoji": "🍜"},
+    {"label": "짬뽕", "emoji": "🌶️"},
+    {"label": "탕수육", "emoji": "🍖"},
+    {"label": "마라탕", "emoji": "🥘"},
+    {"label": "양꼬치", "emoji": "🍢"}
+  ],
+  "일식": [
+    {"label": "초밥", "emoji": "🍣"},
+    {"label": "라멘", "emoji": "🍜"},
+    {"label": "우동", "emoji": "🍜"},
+    {"label": "돈카츠", "emoji": "🍖"},
+    {"label": "규동", "emoji": "🥩"},
+    {"label": "오마카세", "emoji": "🍱"}
+  ],
+  "양식": [
+    {"label": "파스타", "emoji": "🍝"},
+    {"label": "스테이크", "emoji": "🥩"},
+    {"label": "리조또", "emoji": "🍚"},
+    {"label": "샐러드", "emoji": "🥗"},
+    {"label": "스프", "emoji": "🍲"}
+  ],
+  "분식": [
+    {"label": "떡볶이", "emoji": "🌶️"},
+    {"label": "순대", "emoji": "🍢"},
+    {"label": "튀김", "emoji": "🍤"},
+    {"label": "김밥", "emoji": "🍙"},
+    {"label": "라볶이", "emoji": "🍜"},
+    {"label": "엽기떡볶이", "emoji": "🔥"}
+  ],
+  "치킨": [
+    {"label": "후라이드", "emoji": "🍗"},
+    {"label": "양념치킨", "emoji": "🍗"},
+    {"label": "간장치킨", "emoji": "🍗"},
+    {"label": "파닭", "emoji": "🍗"},
+    {"label": "뿌링클", "emoji": "🍗"},
+    {"label": "치즈볼", "emoji": "🧀"}
+  ],
+  "피자": [
+    {"label": "페퍼로니", "emoji": "🍕"},
+    {"label": "마르게리따", "emoji": "🍕"},
+    {"label": "콤비네이션", "emoji": "🍕"},
+    {"label": "불고기피자", "emoji": "🍕"},
+    {"label": "포테이토", "emoji": "🍕"}
+  ],
+  "햄버거": [
+    {"label": "빅맥", "emoji": "🍔"},
+    {"label": "와퍼", "emoji": "🍔"},
+    {"label": "더블패티", "emoji": "🍔"},
+    {"label": "치킨버거", "emoji": "🍗"},
+    {"label": "쉑쉑버거", "emoji": "🍔"},
+    {"label": "스매시버거", "emoji": "🍔"}
+  ],
+  "카페": [
+    {"label": "아메리카노", "emoji": "☕"},
+    {"label": "라떼", "emoji": "🥛"},
+    {"label": "에이드", "emoji": "🍹"},
+    {"label": "스무디", "emoji": "🥤"},
+    {"label": "딸기라떼", "emoji": "🍓"}
+  ],
+  "디저트": [
+    {"label": "케이크", "emoji": "🎂"},
+    {"label": "마카롱", "emoji": "🍬"},
+    {"label": "와플", "emoji": "🧇"},
+    {"label": "빙수", "emoji": "🍧"},
+    {"label": "아이스크림", "emoji": "🍦"},
+    {"label": "타르트", "emoji": "🥧"}
+  ],
+  "동남아": [
+    {"label": "쌀국수", "emoji": "🍜"},
+    {"label": "팟타이", "emoji": "🍜"},
+    {"label": "반미", "emoji": "🥖"},
+    {"label": "나시고랭", "emoji": "🍚"},
+    {"label": "똠얌꿍", "emoji": "🍲"}
+  ],
+  "멕시칸": [
+    {"label": "타코", "emoji": "🌮"},
+    {"label": "부리또", "emoji": "🌯"},
+    {"label": "나초", "emoji": "🧀"},
+    {"label": "케사디아", "emoji": "🫓"},
+    {"label": "과카몰리", "emoji": "🥑"}
+  ]
+}

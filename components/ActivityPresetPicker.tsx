@@ -7,6 +7,7 @@ interface ActivityPresetPickerProps {
   selected: ActivityItem[];
   maxCount: number;
   onToggle: (activity: ActivityItem) => void;
+  title?: string;
 }
 
 export default function ActivityPresetPicker({
@@ -14,6 +15,7 @@ export default function ActivityPresetPicker({
   selected,
   maxCount,
   onToggle,
+  title,
 }: ActivityPresetPickerProps) {
   const selectedLabels = new Set(selected.map((s) => s.label));
   const canAdd = selected.length < maxCount;
@@ -21,7 +23,7 @@ export default function ActivityPresetPicker({
   return (
     <div>
       <p style={{ fontSize: 14, fontWeight: 700, color: '#888', marginBottom: 10 }}>
-        추천 활동 빠른 선택
+        {title ?? '추천 활동 빠른 선택'}
       </p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {activities.map((a) => {

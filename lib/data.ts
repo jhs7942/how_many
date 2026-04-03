@@ -1,5 +1,7 @@
 import activitiesJson from '@/assets/data/activities.json';
 import placesJson from '@/assets/data/places.json';
+import foodsJson from '@/assets/data/foods.json';
+import menusJson from '@/assets/data/menus.json';
 
 export interface ActivityItem {
   label: string;
@@ -20,3 +22,9 @@ export const ALL_ACTIVITIES: ActivityItem[] = Array.from(
     Object.values(activitiesJson).flat().map((a) => [a.label, a])
   ).values()
 );
+
+// 음식 카테고리 목록 (인원수 무관, 단일 배열)
+export const ALL_FOODS: ActivityItem[] = foodsJson;
+
+// 음식 카테고리별 세부 메뉴
+export const MENU_DATA: Record<string, ActivityItem[]> = menusJson;

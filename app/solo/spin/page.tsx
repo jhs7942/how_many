@@ -7,7 +7,7 @@ import PageLayout from '@/components/PageLayout';
 import SpinWheel, { SpinWheelHandle } from '@/components/SpinWheel';
 import Toast, { useToast } from '@/components/Toast';
 import { session } from '@/lib/session';
-import { ACTIVITY_DATA } from '@/lib/data';
+import { ACTIVITY_DATA, type ActivityItem } from '@/lib/data';
 
 export default function SoloSpinPage() {
   const router = useRouter();
@@ -15,9 +15,12 @@ export default function SoloSpinPage() {
   const [isSpinning, setIsSpinning] = useState(false);
   const [hasResult, setHasResult] = useState(false);
   const { toast, showToast } = useToast();
+  const [segments, setSegments] = useState<ActivityItem[]>([]);
 
-  const people = session.get<number>('people') ?? 4;
-  const segments = ACTIVITY_DATA[people] ?? ACTIVITY_DATA[4];
+  useEffect(() => {
+    const people = session.get<number>('people') ?? 4;
+    setSegments(ACTIVITY_DATA[people] ?? ACTIVITY_DATA[4]);
+  }, []);
 
   const handleSpin = () => {
     if (isSpinning || hasResult) return;
