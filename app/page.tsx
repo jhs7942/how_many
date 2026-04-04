@@ -64,12 +64,12 @@ export default function HomePage() {
             minHeight: '100svh',
             display: 'flex',
             flexDirection: 'column',
-            padding: '0 20px calc(40px + env(safe-area-inset-bottom, 0px))',
+            padding: '0 20px calc(24px + env(safe-area-inset-bottom, 0px))',
             animation: 'fadeIn 0.5s ease forwards',
           }}
         >
           {/* 헤더 */}
-          <div style={{ padding: '28px 0 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ padding: '20px 0 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 28 }}>🎲</span>
               <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--color-primary)' }}>몇명이니</span>
@@ -91,12 +91,12 @@ export default function HomePage() {
           </div>
 
           {/* 히어로 */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '24px 0' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', padding: '16px 0' }}>
             <h1 style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.3, color: 'var(--color-text)', marginBottom: 10 }}>
               오늘 뭐 할지<br />
               <span style={{ color: 'var(--color-primary)' }}>10초</span>에 결정해요
             </h1>
-            <p style={{ fontSize: 15, color: 'var(--color-text-secondary)', lineHeight: 1.6, marginBottom: 36 }}>
+            <p style={{ fontSize: 15, color: 'var(--color-text-secondary)', lineHeight: 1.6, marginBottom: 20 }}>
               단톡방 30분 토론은 이제 그만!<br />
               혼자도, 같이도 빠르게 결정해요.
             </p>
@@ -204,7 +204,7 @@ export default function HomePage() {
           </div>
 
           {/* 푸터 */}
-          <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--color-text-secondary)', paddingTop: 16 }}>
+          <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--color-text-secondary)', paddingTop: 16, marginTop: 'auto' }}>
             모임 결정 피로, 이제 몇명이니가 해결할게요 🧡
           </div>
         </div>
