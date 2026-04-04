@@ -121,7 +121,8 @@
       "Bash(xxd /Users/jeonghyeonseung/.claude/agents/dev/design-evaluate.md)",
       "Bash(mkdir -p /Users/jeonghyeonseung/workspaces/how_many/.claude/viewport-test/screenshots)",
       "Bash(mkdir -p /Users/jeonghyeonseung/workspaces/how_many/.claude/plans)",
-      "Bash(PAGES=\"/,/solo/people,/solo/spin,/group/create,/group/invite\" node .claude/viewport-test/capture.js 2>&1)"
+      "Bash(PAGES=\"/,/solo/people,/solo/spin,/group/create,/group/invite\" node .claude/viewport-test/capture.js 2>&1)",
+      "Bash(./node_modules/.bin/next build:*)"
     ]
   }
 }
