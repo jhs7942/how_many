@@ -74,7 +74,7 @@ export default function RopePull({
 
   function onHandleDown(handleIdx: number, e: React.PointerEvent) {
     if (gameState !== 'idle') return;
-    e.currentTarget.setPointerCapture(e.pointerId);
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* 합성 이벤트 등에서 실패 가능 */ }
     pointerStartY.current = e.clientY;
     setGrabbedIndex(handleIdx);
     setGameState('grabbed');
