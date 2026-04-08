@@ -6,6 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'out',
   server: {
     androidScheme: 'https',
+    url: 'https://how-many-mauve.vercel.app',
   },
   plugins: {
     SplashScreen: {
