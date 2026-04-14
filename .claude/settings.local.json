@@ -122,7 +122,17 @@
       "Bash(mkdir -p /Users/jeonghyeonseung/workspaces/how_many/.claude/viewport-test/screenshots)",
       "Bash(mkdir -p /Users/jeonghyeonseung/workspaces/how_many/.claude/plans)",
       "Bash(PAGES=\"/,/solo/people,/solo/spin,/group/create,/group/invite\" node .claude/viewport-test/capture.js 2>&1)",
-      "Bash(./node_modules/.bin/next build:*)"
+      "Bash(./node_modules/.bin/next build:*)",
+      "WebFetch(domain:capacitorjs.com)",
+      "WebFetch(domain:github.com)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(NEXT_STATIC_EXPORT=true npx next build)",
+      "Bash(./gradlew assembleDebug)",
+      "Bash(export JAVA_HOME=\"/c/Program Files/Android/Android Studio/jbr\")",
+      "Bash('/c/Program Files/Android/Android Studio/jbr/bin/java' -jar gradle/wrapper/gradle-wrapper.jar assembleDebug)",
+      "Bash(reg query:*)",
+      "Bash('/c/Program Files/Android/Android Studio/jbr/bin/java' -jar gradle/wrapper/gradle-wrapper.jar bundleRelease)",
+      "Bash(wc -l e2e/*.spec.ts)"
     ]
   }
 }

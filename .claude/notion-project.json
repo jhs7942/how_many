@@ -1,0 +1,14 @@
+{
+  "project": {
+    "hub_page_id": "33df0023-5f70-81eb-bebb-f8f25af19df4",
+    "tasks_db": "0e92f8f154944760a85c726d8e122606",
+    "tasks_ds": "36b21b8d-1d9c-45de-9e95-9054f6bb792d",
+    "issues_db": "9d39e293f839459999b4f0262079dcfb",
+    "issues_ds": "06ca8f7a-7578-4f77-a0b0-2d0f7d8aaaa4",
+    "docs_db": "605ce9137ed944e2af2be02f878ba7b2",
+    "docs_ds": "22f93eaa-aea3-4aac-8f8d-f4dcac75a78c"
+  },
+  "task_ids": {},
+  "issue_ids": {},
+  "last_sync": "2026-04-10T02:40:00+09:00"
+}
