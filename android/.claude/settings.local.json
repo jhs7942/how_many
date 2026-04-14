@@ -16,7 +16,13 @@
       "Bash(__NEW_LINE_5e0b5bf388976497__ cat:*)",
       "Bash(/Users/jeonghyeonseung/workspaces/how_many/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml:*)",
       "Bash(__NEW_LINE_5e0b5bf388976497__ echo:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(NEXT_STATIC_EXPORT=true npx next build)",
+      "Bash(./gradlew bundleRelease)",
+      "Bash(cmd //c \"gradlew.bat bundleRelease\")",
+      "Bash(cmd //c \".\\\\\\\\gradlew.bat bundleRelease\")",
+      "Bash(cmd:*)",
+      "Bash(powershell:*)"
     ]
   }
 }
