@@ -57,3 +57,7 @@ android/local.properties
 
 # IntelliJ / WebStorm 프로젝트 설정
 .idea/
+
+# Google Cloud Service Account 키 (유출 방지)
+*-sa.json
+*service-account*.json

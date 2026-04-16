@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "google-play-console": {
+      "command": "uvx",
+      "args": ["google-play-mcp"],
+      "env": {
+        "GOOGLE_APPLICATION_CREDENTIALS": "/Users/jeonghyeonseung/.config/gcloud/howmany-play-sa.json"
+      }
+    }
+  }
+}
