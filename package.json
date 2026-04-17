@@ -10,7 +10,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "build:android": "NEXT_STATIC_EXPORT=true next build && npx cap sync android",
+    "build:android": "npm run build:android:prod",
+    "build:android:dev": "if [ -z \"$CAPACITOR_SERVER_URL\" ]; then echo 'ERROR: CAPACITOR_SERVER_URL 환경변수 필수. 예: CAPACITOR_SERVER_URL=https://how-many-git-develop-xxx.vercel.app npm run build:android:dev' && exit 1; fi && export NEXT_STATIC_EXPORT=true && next build && npx cap sync android",
+    "build:android:prod": "export NEXT_STATIC_EXPORT=true CAPACITOR_SERVER_URL=https://how-many-mauve.vercel.app && next build && npx cap sync android",
     "open:android": "npx cap open android"
   },
   "dependencies": {

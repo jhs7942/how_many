@@ -145,13 +145,115 @@ NEXT_PUBLIC_APP_URL=https://how-many-mauve.vercel.app
 
 ### Android (Capacitor)
 - **앱 ID**: `com.howmany.app`
-- **빌드**:
+- **빌드 스크립트**:
   ```bash
-  npm run build:android   # Next.js static export + cap sync
+  # 프로덕션 빌드 (기본) — prod URL 고정
+  npm run build:android        # = build:android:prod 과 동일
+  npm run build:android:prod   # 명시적 prod 빌드
+
+  # 개발 빌드 — CAPACITOR_SERVER_URL을 shell에서 주입
+  CAPACITOR_SERVER_URL=https://how-many-git-develop-xxx.vercel.app npm run build:android:dev
+
+  # AAB 생성
   cd android && JAVA_HOME=/Applications/Android\ Studio.app/Contents/jbr/Contents/Home ./gradlew bundleRelease
   ```
 - **AAB 출력**: `android/app/build/outputs/bundle/release/app-release.aab`
 - **키스토어**: `android/howmany-release.keystore` + `android/key.properties` (git 제외, 별도 백업)
+- **트랙 정책**: 내부 테스트 트랙 = dev URL 빌드, 프로덕션 트랙 = prod URL 빌드
+- **versionCode 규칙**: dev/prod 모두 같은 `applicationId`를 사용하므로, versionCode는 **전역 단조 증가**해야 한다 (dev 10 → prod 11 → dev 12 ...). Play Console이 동일 앱의 모든 트랙에서 versionCode 유일성을 요구함.
+
+### 브랜치 전략
+```
+feature/xxx → develop → main
+```
+- **feature 브랜치**: `saver7942/hm-{번호}-{제목-slug}` (Linear 자동 생성 형식)
+- **develop**: 개발 통합 브랜치. Vercel preview URL(`how-many-git-develop-*.vercel.app`)이 자동 할당됨. 내부 테스트 AAB는 이 URL을 바라봄.
+- **main**: 프로덕션. `git push origin main` → Vercel 자동 배포 → 실사용자 즉시 반영.
+
+## Linear 이슈 트래킹
+
+### 팀 구성 (2인)
+
+| 역할 | 이름 | 이메일 | Linear user id | 주 책임 |
+|---|---|---|---|---|
+| 개발자 (project lead) | 정현승 | saver7942@gmail.com | `393b680a-570b-40ce-8158-90b2bd7178dc` | 분석·설계·구현·리뷰·배포, 이슈 상태 전이 주도 |
+| 기획자 / QA | [서울_18반_문은서] | rlashfod0202@gmail.com | `a1d2088f-02e1-4466-9ead-d46d92824959` | 버그 제보·재현 검증·Done 확정, 요구사항 피드백 |
+
+- 두 사람 모두 HM 팀 admin 권한 보유
+- 프로젝트 `몇명이니 v1.1 안정화`의 project member에는 lead인 정현승만 등록됨 (Linear UI상 분리)
+
+### 워크스페이스 / 프로젝트
+
+| 항목 | 값 |
+|---|---|
+| 워크스페이스 | https://linear.app/wqeqw |
+| Team | `몇명이니` (key: HM, id: `04715cd9-4111-410d-96f9-82db1a0a3c1b`) |
+| Active Project | `몇명이니 v1.1 안정화` (MVP 출시 후 안정화 단계, 시작일 2026-04-16, 상태 In Progress) |
+| 동기화 대상 | `sync_target: linear` (GitHub 미사용) |
+| 로컬 메타 | `.claude/plans/progress.md § Linear` |
+
+### 상태 플로우
+
+```
+Backlog ─▶ Todo ─▶ In Progress ─▶ In Review ─▶ Done
+   ▲                                   │
+   └─── 재오픈(재현 실패) ──────────────┘
+```
+
+| 상태 | 의미 | 주 담당 | 전이 트리거 |
+|---|---|---|---|
+| Backlog | 아이디어·미분류 | 기획자 | 이슈 생성 직후 |
+| Todo | 이번 사이클 진행 예정 | 기획자 → 개발자 | 우선순위 확정, 개발자 픽업 대기 |
+| In Progress | 구현·조사 중 | 개발자 | 개발자 착수 시점 |
+| In Review | 코드 반영 완료, 재현 검증 대기 | 개발자 → 기획자 | 커밋·배포 후 Linear 코멘트로 "재현 부탁" |
+| Done | 해결 확정 | 기획자 | 기획자 재현 확인 완료 |
+
+### 이슈 라이프사이클 (표준 버그 기준)
+
+1. **기획자가 이슈 생성** — 증상·영향·재현·스크린샷을 description에 기록 (Backlog)
+2. **개발자가 분석·픽업** — description을 코드 맥락과 대조, Todo로 이동하며 우선순위 라벨 부여
+3. **개발자가 작업 착수** — `In Progress`로 전이 + `phase/implement` 라벨
+4. **개발자가 코드 반영·검증** — 로컬 빌드/테스트 후 커밋 푸시, Linear 코멘트에 "수정 완료 + 재현 부탁" 기록, `In Review`로 전이
+5. **기획자 재현 확인** — Vercel 배포본 또는 Android 기기에서 증상 소거 검증
+   - 정상: `Done`으로 전이 (완료 코멘트 선택)
+   - 실패: `Todo`로 되돌리고 추가 재현 정보(기기·환경·로그) 코멘트
+
+### 라벨 체계 (16종)
+
+4개 축으로 구성. 한 이슈에 축 당 최대 1개 라벨 부착 권장.
+
+| 축 | 라벨 | 용도 |
+|---|---|---|
+| **phase/** (6) | `ideate` · `design` · `implement` · `review` · `docs` · `done` | dev-orchestrator 파이프라인 단계. Claude가 자동 전이 |
+| **type/** (4) | `feature` · `bug` · `improvement` · `infra` | 이슈 분류 (리포트·대시보드용) |
+| **priority/** (4) | `urgent` · `high` · `medium` · `low` | 처리 우선순위. Linear 내장 priority와 병행 사용 |
+| **status/** (2) | `blocked` · `needs-info` | 특수 상태. `blocked` 감지 시 dev-orchestrator가 Phase 정지 |
+
+라벨 id 매핑 전체는 `.claude/plans/progress.md § Linear > label_map` 참조.
+
+### 동기화 메커니즘
+
+| 방향 | 트리거 | 실행 주체 | 커맨드 |
+|---|---|---|---|
+| Claude → Linear | Phase 경계 + 수동 | 개발자 (Claude Code) | `/project/linear-sync` 또는 dev-orchestrator 훅 자동 |
+| Linear → Claude | 세션 재개·Phase 전이 + 수동 | 개발자 | `/project/linear-pull` |
+| 상태 조회 | 수동 | 누구든 | `/project/linear-status` |
+
+- progress.md 단일 source of truth 원칙
+- 기획자가 Linear 웹에서 직접 편집한 변경(`createdBy = 문은서` 기반)은 반드시 `/project/linear-pull`로 drift 반영
+- Claude Code는 Linear webhook을 실시간으로 받을 수 없으므로 **세션 재개 시점이 동기화 포인트**
+
+### 대표 이슈 예시
+
+| 이슈 | 작성자 | 성격 |
+|---|---|---|
+| HM-22 (웹↔앱 방장 무한 대기) | 기획자 (문은서) | 외부 QA 리포트. description + 스크린샷 + 원인 추측 코멘트 포함 |
+| HM-1 ~ HM-21 | 개발자 (정현승) | 초기 백로그. QA 피드백 + 코드 리뷰 결과를 일괄 이슈화 |
+
+### Git 브랜치 컨벤션
+
+Linear가 자동 생성하는 브랜치명을 사용한다: `saver7942/hm-{번호}-{제목-slug}`.
+- PR 본문 상단에 이슈 identifier(예: `HM-22`)를 넣으면 Linear가 자동 링킹하며, PR 머지 시 관련 이슈의 `phase/implement → phase/review` 전이가 트리거된다.
 
 ---
 

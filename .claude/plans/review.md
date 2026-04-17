@@ -1,103 +1,62 @@
-# 코드 리뷰: QA 피드백 10건 수정
+# Review: 개발 URL 분리 (HM-23)
 
 ## 변경 범위
-- 변경 파일: 15개 (게임 컴포넌트 4, flow 컴포넌트 5, 라우트 페이지 3, 공통 컴포넌트 1, 유틸 1)
-- 관련 기능: 결과 이동 딜레이, 재회전 메시지, nearMiss 연출, 컵 최소 크기, 설정 설명 개선, 문구 통일, 지도 버튼 브랜드화, 토스트 위치, 이모지셋 분리, 게임 타입 분배 변경
+- 변경 파일: `capacitor.config.ts`, `package.json`, `.env.example`(신규), `CLAUDE.md`
+- 관련 기능: Android Capacitor 빌드의 dev/prod URL 분리
 
-## 발견 사항
+## CRITICAL
 
-### [HIGH] SpinWheel — respin 중 setTimeout cleanup 누락 (메모리 누수/동작 회귀 가능)
+없음
 
-- 파일: `components/SpinWheel.tsx:69-75`
-- 문제: `spin()` 내부에서 respin 발동 시 `setTimeout(() => { ... }, 600)`을 호출하지만, 이 타이머 ID를 어디에도 저장하지 않는다. 컴포넌트가 600ms 내에 unmount되면 (사용자가 뒤로가기를 누르거나 라우트 전환 시) unmount된 컴포넌트에서 `spinToIndex`가 실행되어 이미 정리된 canvas에 대해 draw()를 호출한다. React strict mode에서 경고가 발생하고, 드물지만 의도치 않은 `onResult` 콜백 실행으로 결과 이중 저장이 발생할 수 있다.
-- 수정: `stateRef`에 타이머 ID를 저장하고 컴포넌트 cleanup에서 정리:
-  ```tsx
-  const respinTimerRef = useRef<ReturnType<typeof setTimeout>>();
-  // spin() 내부
-  respinTimerRef.current = setTimeout(() => { ... }, 600);
-  // useEffect cleanup
-  useEffect(() => () => clearTimeout(respinTimerRef.current), []);
-  ```
+## HIGH
 
-### [HIGH] SlotMachine — nearMiss setTimeout cleanup 누락
+### [HIGH] `.env.example`이 `.gitignore`에 의해 무시됨
+- 파일: `.gitignore:34` — 패턴 `.env*`
+- 문제: `.env.example`이 `.env*` glob에 매칭되어 git tracked 되지 않는다. `git check-ignore -v .env.example` → `.gitignore:34:.env*`로 확인됨. 다른 개발자가 clone해도 이 파일이 없어 `CAPACITOR_SERVER_URL` 가이드를 볼 수 없다.
+- 수정: `.gitignore`에 `!.env.example` 예외 추가, 또는 `.env.example` 대신 `CLAUDE.md`에만 문서화 (이미 CLAUDE.md에 충분한 정보가 있으므로 `.env.example` 제거도 대안).
 
-- 파일: `components/SlotMachine.tsx:137-141`
-- 문제: 3개 릴이 모두 정지한 후 nearMiss 연출 시 `setTimeout(() => retryLastReel(...), 1200)`을 호출하지만, 이 타이머 ID를 저장하지 않는다. 기존 cleanup 로직(`cancelledRef.current = true` + `rafIds.current.forEach(cancelAnimationFrame)`)은 rAF만 정리하고 setTimeout은 정리하지 않는다. 1200ms 내에 unmount되면 `cancelledRef` 체크 덕분에 rAF는 안전하지만, `retryLastReel` 함수 자체는 호출되어 `setStoppedReels`, `setGameState` 등 unmounted 컴포넌트의 setState가 실행된다.
-- 수정: setTimeout ID를 ref에 저장하고 cleanup에서 정리:
-  ```tsx
-  const nearMissTimerRef = useRef<ReturnType<typeof setTimeout>>();
-  // startSpin 내부
-  nearMissTimerRef.current = setTimeout(() => { ... }, 1200);
-  // 기존 cleanup useEffect에 추가
-  useEffect(() => {
-    return () => {
-      cancelledRef.current = true;
-      rafIds.current.forEach(cancelAnimationFrame);
-      clearTimeout(nearMissTimerRef.current);
-    };
-  }, []);
-  ```
-- 비고: `retryLastReel` 내부에서는 `cancelledRef.current`를 체크하므로 rAF 프레임 자체는 안전하게 중단된다. 그러나 함수 진입부의 `setStoppedReels([true, true, false])`, `setGameState('spinning')`은 cancelledRef 체크 이전에 실행된다.
+### [HIGH] `build:android:dev` env 누락 시 silent fallback
+- 파일: `package.json:14`
+- 문제: `npm run build:android:dev`를 `CAPACITOR_SERVER_URL` 없이 실행하면 **에러 없이 prod URL로 빌드**된다. 개발자가 "dev 빌드 완료"로 착각하고 내부 테스트 트랙에 prod URL AAB를 업로드할 수 있다. `capacitor.config.ts`의 `console.log` 경고는 `next build` 출력에 묻혀 놓치기 쉽다.
+- 수정: `build:android:dev` 스크립트 앞에 `test -n "$CAPACITOR_SERVER_URL" || (echo "ERROR: CAPACITOR_SERVER_URL 필수" && exit 1)` 가드 추가를 권장. 또는 `capacitor.config.ts`에서 `CAPACITOR_SERVER_URL`이 `build:android:dev` 컨텍스트일 때 throw하는 방식.
 
-### [MEDIUM] SlotMachine — retryLastReel에서 reelOffsetsRef.current[2] 참조 타이밍
+## MEDIUM
 
-- 파일: `components/SlotMachine.tsx:161`
-- 문제: `retryLastReel`은 nearMiss 1200ms 후에 호출되며, `const startY = reelOffsetsRef.current[2]`로 현재 릴 2의 위치를 읽는다. `reelOffsetsRef`는 `useEffect`로 동기화되므로 최신 값이 반영된다. 다만 `setReelOffsets`의 배치 업데이트와 `useEffect` 사이에 한 프레임 지연이 있을 수 있다. 실제로는 1200ms 딜레이 동안 리렌더가 완료되므로 문제가 되지 않을 가능성이 높다.
-- 수준: 현재 동작에 실질적 문제 없음. 그러나 `reelOffsetsRef` 동기화를 `useEffect` 대신 `setReelOffsets` 호출 시 직접 갱신하면 더 견고:
-  ```tsx
-  setReelOffsets(prev => {
-    const next = [...prev];
-    next[reelIdx] = currentY;
-    reelOffsetsRef.current = next; // 즉시 동기화
-    return next;
-  });
-  ```
+### [MEDIUM] `build:android` 스크립트가 `build:android:prod`의 복사본
+- 파일: `package.json:13,15`
+- 문제: plan에서는 `build:android`를 `"npm run build:android:prod"` alias로 정의하기로 했으나, 실제 구현은 동일 명령어를 복사-붙여넣기했다. 향후 prod URL 변경 시 2곳을 수정해야 한다.
+- 수정: `"build:android": "npm run build:android:prod"` 로 변경하면 single source of truth 유지.
 
-### [MEDIUM] FlowRandomPage — handleResult 내 gameType non-null assertion
+### [MEDIUM] CLAUDE.md에 Linear 섹션 대량 추가 (100줄+)
+- 파일: `CLAUDE.md:173-256`
+- 문제: "개발 URL 분리" 변경과 무관한 Linear 이슈 트래킹 섹션(팀 구성, 상태 플로우, 라벨 체계, 동기화 메커니즘 등 ~80줄)이 함께 추가되었다. 이 내용은 이미 `CLAUDE.md`(프로젝트 instruction) 상위 레이어에 동일하게 존재하여 **중복**이다. 이 PR의 변경 범위를 벗어남.
+- 수정: Linear 관련 섹션은 별도 커밋으로 분리하거나, 상위 instruction과 중복이므로 제거 검토.
 
-- 파일: `components/flow/FlowRandomPage.tsx:90`
-- 문제: `RESULT_DELAY[gameType!]`에서 non-null assertion을 사용한다. `handleResult`는 게임 컴포넌트의 `onResult` 콜백으로 호출되므로 이 시점에 `gameType`이 null일 가능성은 거의 없다. 그러나 코드 안전성 측면에서 fallback(`?? 1000`)이 이미 있으므로 `!` 대신 `gameType ?? ''`로 변경하면 assertion 없이도 동일하게 동작한다.
-- 수준: 런타임 문제 없음, 코드 안전성 개선 사항.
+## LOW / 제안
 
-### [MEDIUM] ResultClient — window.open 반환값 미처리 + 팝업 차단 대응 없음
+### [LOW] `export VAR1=val1 VAR2=val2` 패턴은 Windows 비호환
+- 파일: `package.json:13-15`
+- 문제: `export`는 POSIX 전용. Windows CMD/PowerShell에서 직접 실행 불가. 현재 팀이 macOS만 사용하고 `engines.node`에 OS 제약이 없으나, 향후 `cross-env` 패키지 도입을 고려할 수 있다.
 
-- 파일: `app/result/[id]/ResultClient.tsx:95, 115`
-- 문제: `window.open()`을 직접 호출하지만:
-  1. 반환값(WindowProxy | null)을 확인하지 않아 팝업 차단 시 사용자에게 피드백이 없다
-  2. FlowResultPage에서는 `handleMapSearch` 함수로 추상화하여 동일한 패턴을 사용하고 있어 기능적으로는 일관적이나, FlowResultPage에서도 동일하게 팝업 차단 대응이 없다
-  3. 모바일 브라우저에서는 대부분 팝업 차단이 적용되지 않으므로(사용자 클릭 이벤트 내부 호출) 실질적 문제 확률은 낮다
-- 수준: 모바일 타겟 앱이므로 실질적 영향 낮음. 데스크톱 접근 시에만 잠재적 이슈.
+### [LOW] `capacitor.config.ts`의 `console.log`가 빌드 때마다 출력
+- 파일: `capacitor.config.ts:10-13`
+- 문제: `npx cap sync` 실행 시마다 2줄의 로그가 출력된다. 의도된 동작이지만, 빌드 로그가 길어지면 노이즈가 될 수 있다. 현재는 유용하므로 유지해도 무방.
 
-### [MEDIUM] ResultClient / FlowResultPage — 지도 버튼 스타일 코드 중복
-
-- 파일: `app/result/[id]/ResultClient.tsx:93-134`, `components/flow/FlowResultPage.tsx:139-183`
-- 문제: 카카오지도/네이버지도 버튼의 스타일과 onClick 핸들러가 두 파일에 거의 동일하게 복사되어 있다. ResultClient는 공유 링크로 접근하는 페이지이고 FlowResultPage는 인앱 결과 페이지로 용도가 다르지만, 지도 버튼 UI는 공통 컴포넌트로 추출 가능하다.
-- 수준: DRY 원칙 위반이나 현재 2곳이므로 급하지 않음.
-
-### [LOW] pickGameType — n>=7에서 shuffle 제외 시 ContentShuffle.tsx의 CUP_W 최소값 보장과 모순
-
-- 파일: `lib/utils.ts:20-22`, `components/ContentShuffle.tsx:119`
-- 문제: ContentShuffle에서 `CUP_W = Math.max(48, ...)`로 최소 48px을 보장하는 수정을 했는데, pickGameType에서는 n>=7일 때 shuffle을 아예 제외했다. 두 수정이 동시에 적용되어 ContentShuffle의 최소값 보장이 n>=7에서는 사실상 무의미하다. 모순은 아니지만 (n<7에서도 최소값이 작동), n>=7에서 shuffle을 제외한 이유가 "컵이 작아져 가독성 저하"인데 CUP_W 최소값으로 해결을 시도한 것과 방향이 다르다.
-- 수준: 의도적 이중 안전장치로 볼 수 있음. 동작에 문제 없음.
-
-## 리뷰 요약
+## 종합 의견
 
 | 심각도 | 건수 | 상태 |
 |--------|------|------|
 | CRITICAL | 0 | pass |
-| HIGH | 2 | warn |
-| MEDIUM | 4 | info |
-| LOW | 1 | note |
+| HIGH | 2 | action required |
+| MEDIUM | 2 | info |
+| LOW | 2 | note |
 
-### HIGH 이슈 요약
-1. **SpinWheel respin setTimeout 미정리**: unmount 시 respin 타이머가 정리되지 않아 메모리 누수 및 unmounted setState 가능
-2. **SlotMachine nearMiss setTimeout 미정리**: 동일 패턴. 1200ms 타이머 미정리로 unmount 후 setState 호출 가능
+**Verdict: Warning**
 
-### Verdict: Warning
+핵심 설계(env 기반 분기, prod fallback)는 적절하다. 필수 수정 2건:
+1. `.env.example`을 `.gitignore`에서 예외 처리하거나 제거
+2. `build:android:dev`에 env 미설정 가드 추가 (silent prod fallback 방지)
 
-CRITICAL 보안 이슈는 없으나, HIGH 이슈 2건이 존재합니다.
-- 두 이슈 모두 setTimeout cleanup 누락으로, 빠른 라우트 전환 시 unmounted 컴포넌트의 state 업데이트를 유발할 수 있습니다
-- React 18에서는 unmounted setState 경고가 제거되었으나, 의도치 않은 onResult 콜백 실행으로 결과 이중 저장 가능성이 있어 수정 권장합니다
-- 나머지 MEDIUM/LOW 이슈는 주의하여 머지 가능합니다
+선택 수정: `build:android`를 `npm run build:android:prod` alias로 변경하여 DRY 유지.
 
-<!-- BLOG_TRIGGER: ai-review | CRITICAL 0건, HIGH 2건 | SpinWheel/SlotMachine에서 setTimeout cleanup 누락으로 unmount 후 setState 및 결과 이중 저장 가능 -->
+<!-- BLOG_TRIGGER: ai-review | CRITICAL 0건, HIGH 2건 | build:android:dev가 env 누락 시 silent하게 prod URL로 빌드되는 문제 -->
