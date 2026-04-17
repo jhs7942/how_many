@@ -12,7 +12,7 @@ export default function PageLayout({ children, className = '' }: PageLayoutProps
         minHeight: '100svh',
         display: 'flex',
         flexDirection: 'column',
-        paddingTop: 0,
+        paddingTop: 'var(--safe-top)',
         paddingRight: '20px',
         paddingBottom: 'calc(32px + env(safe-area-inset-bottom, 0px))',
         paddingLeft: '20px',

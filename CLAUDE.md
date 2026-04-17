@@ -163,12 +163,23 @@ NEXT_PUBLIC_APP_URL=https://how-many-mauve.vercel.app
 - **versionCode 규칙**: dev/prod 모두 같은 `applicationId`를 사용하므로, versionCode는 **전역 단조 증가**해야 한다 (dev 10 → prod 11 → dev 12 ...). Play Console이 동일 앱의 모든 트랙에서 versionCode 유일성을 요구함.
 
 ### 브랜치 전략
+
 ```
-feature/xxx → develop → main
+develop → main
+  ↑
+(feature 브랜치는 선택사항)
 ```
-- **feature 브랜치**: `saver7942/hm-{번호}-{제목-slug}` (Linear 자동 생성 형식)
-- **develop**: 개발 통합 브랜치. Vercel preview URL(`how-many-git-develop-*.vercel.app`)이 자동 할당됨. 내부 테스트 AAB는 이 URL을 바라봄.
-- **main**: 프로덕션. `git push origin main` → Vercel 자동 배포 → 실사용자 즉시 반영.
+
+**기본 원칙: 모든 구현은 `develop` 브랜치에서 직접 커밋한다.** 2026-04 이후 실제 워크플로우.
+
+- **develop**: 개발 통합 브랜치 **겸 작업 브랜치**. Vercel preview URL(`how-many-git-develop-*.vercel.app`)이 자동 할당됨. 내부 테스트 AAB는 이 URL을 바라봄. 대부분의 버그 수정·기능 개발이 여기서 직접 이루어짐.
+- **main**: 프로덕션. 실기기 검증 완료 후 사용자 승인 시 `develop → main` fast-forward 머지. `git push origin main` → Vercel 자동 배포 → 실사용자 즉시 반영.
+- **feature 브랜치 (선택)**: 다음 상황에서만 분기한다.
+  - 여러 세션에 걸친 대규모 작업으로 중간 상태가 develop에 노출되면 안 될 때
+  - 실험적 변경이라 롤백 가능성이 높을 때
+  - 외부 리뷰·PR 검토가 필요한 기여
+  - 네이밍: Linear 자동 생성 형식 `saver7942/hm-{번호}-{제목-slug}` 사용
+  - 완료 시 `develop` 으로 PR → 머지 → feature 브랜치 삭제
 
 ## Linear 이슈 트래킹
 
@@ -252,8 +263,10 @@ Backlog ─▶ Todo ─▶ In Progress ─▶ In Review ─▶ Done
 
 ### Git 브랜치 컨벤션
 
-Linear가 자동 생성하는 브랜치명을 사용한다: `saver7942/hm-{번호}-{제목-slug}`.
-- PR 본문 상단에 이슈 identifier(예: `HM-22`)를 넣으면 Linear가 자동 링킹하며, PR 머지 시 관련 이슈의 `phase/implement → phase/review` 전이가 트리거된다.
+**기본은 `develop` 직커밋** (위 `## 배포 설정 > 브랜치 전략` 참조). feature 브랜치를 만드는 경우에만 Linear 자동 생성 브랜치명 `saver7942/hm-{번호}-{제목-slug}` 사용.
+
+- develop 직커밋 시: 커밋 메시지에 이슈 identifier(예: `HM-22`)를 포함하면 Linear가 자동 링킹.
+- PR을 만드는 경우: PR 본문 상단에 이슈 identifier를 넣으면 자동 링킹하며, 머지 시 관련 이슈의 `phase/implement → phase/review` 전이가 트리거된다.
 
 ---
 

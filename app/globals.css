@@ -47,7 +47,9 @@ body {
   margin: 0 auto;
   position: relative;
   overflow-x: hidden;
-  padding-top: var(--safe-top);
+  /* safe-area-inset-top은 각 레이아웃 컨테이너(PageLayout / app/page.tsx / privacy)의
+     padding 안에서 흡수한다. body에 padding-top을 주면 자식의 min-height:100svh와
+     합쳐져 뷰포트를 초과하므로 여기서는 주지 않는다. */
 }
 
 a {

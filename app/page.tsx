@@ -64,7 +64,7 @@ export default function HomePage() {
             minHeight: '100svh',
             display: 'flex',
             flexDirection: 'column',
-            padding: '0 20px calc(24px + env(safe-area-inset-bottom, 0px))',
+            padding: 'var(--safe-top) 20px calc(24px + env(safe-area-inset-bottom, 0px))',
             animation: 'fadeIn 0.5s ease forwards',
           }}
         >

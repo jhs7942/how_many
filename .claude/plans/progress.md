@@ -11,9 +11,9 @@ user_name: 정현승
 
 sync_mode: enabled
 sync_target: linear
-current_issue_id: HM-23
-current_issue_identifier: HM-23
-last_sync_at: null
+current_issue_id: HM-24
+current_issue_identifier: HM-24
+last_sync_at: "2026-04-18"
 last_pull_hash: null
 
 state_map:

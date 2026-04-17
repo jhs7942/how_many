@@ -10,7 +10,7 @@ export default function PrivacyPage() {
         minHeight: '100svh',
         display: 'flex',
         flexDirection: 'column',
-        padding: '0 20px 40px',
+        padding: 'var(--safe-top) 20px calc(40px + env(safe-area-inset-bottom, 0px))',
         animation: 'fadeIn 0.5s ease forwards',
       }}
     >
