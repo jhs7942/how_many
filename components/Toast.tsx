@@ -13,7 +13,7 @@ export default function Toast({ message, visible }: ToastProps) {
       data-testid="toast-message"
       style={{
         position: 'fixed',
-        bottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
+        bottom: 'max(96px, calc(48px + env(safe-area-inset-bottom, 0px)))',
         left: '50%',
         transform: `translateX(-50%) translateY(${visible ? '0' : '80px'})`,
         background: 'rgba(46, 46, 46, 0.92)',

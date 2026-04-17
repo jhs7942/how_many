@@ -38,7 +38,7 @@ export default function GroupLobbyPage() {
   const lastSeenTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const room = useRoomSubscription(roomId);
-  const participants = useParticipants(roomId);
+  const { participants, isLoading: participantsLoading } = useParticipants(roomId);
   const isHostConnected = useHostPresence(roomId, isHost);
 
   useEffect(() => {
@@ -169,7 +169,7 @@ export default function GroupLobbyPage() {
         style={{ flex: 1, minHeight: 0, marginTop: 20, overflowY: 'auto', overflowX: 'hidden', maxWidth: 'calc(100vw - 40px)' }}
       >
         <p style={{ fontSize: 14, fontWeight: 700, color: '#888', marginBottom: 10 }}>
-          참여자 {participants.length}명
+          {participantsLoading ? '참여자 불러오는 중…' : `참여자 ${participants.length}명`}
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {participants.map((p) => (

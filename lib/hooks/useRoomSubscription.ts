@@ -6,23 +6,43 @@ export function useRoomSubscription(roomId: string | null) {
   const [room, setRoom] = useState<Room | null>(null);
 
   useEffect(() => {
-    if (!roomId) return;
-    const sb = getSupabase();
+    if (!roomId) {
+      setRoom(null);
+      return;
+    }
 
-    sb.from('rooms').select().eq('id', roomId).single().then(({ data }: { data: Room | null }) => {
-      if (data) setRoom(data);
-    });
+    setRoom(null);
+
+    const sb = getSupabase();
+    let cancelled = false;
+
+    const load = async () => {
+      const { data } = await sb.from('rooms').select().eq('id', roomId).single();
+      if (cancelled) return;
+      if (data) setRoom(data as Room);
+    };
+
+    load();
 
     const channel = sb
       .channel(`room:${roomId}`)
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` },
-        (payload: { new: Room }) => { setRoom(payload.new); }
+        (payload: { new: Room }) => {
+          if (cancelled) return;
+          setRoom(payload.new);
+        }
       )
-      .subscribe();
+      .subscribe((status: string) => {
+        // 구독 완료 시점에 catch-up fetch — subscribe 이전 UPDATE 누락 방지
+        if (status === 'SUBSCRIBED') load();
+      });
 
-    return () => { sb.removeChannel(channel); };
+    return () => {
+      cancelled = true;
+      sb.removeChannel(channel);
+    };
   }, [roomId]);
 
   return room;

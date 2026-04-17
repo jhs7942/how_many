@@ -4,15 +4,27 @@ import type { Participant } from '../types';
 
 export function useParticipants(roomId: string | null) {
   const [participants, setParticipants] = useState<Participant[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(Boolean(roomId));
 
   useEffect(() => {
-    if (!roomId) return;
-    const sb = getSupabase();
+    if (!roomId) {
+      setParticipants([]);
+      setIsLoading(false);
+      return;
+    }
 
-    const load = () =>
-      sb.from('participants').select().eq('room_id', roomId).then(({ data }: { data: Participant[] | null }) => {
-        if (data) setParticipants(data);
-      });
+    setParticipants([]);
+    setIsLoading(true);
+
+    const sb = getSupabase();
+    let cancelled = false;
+
+    const load = async () => {
+      const { data } = await sb.from('participants').select().eq('room_id', roomId);
+      if (cancelled) return;
+      setParticipants((data as Participant[] | null) ?? []);
+      setIsLoading(false);
+    };
 
     load();
 
@@ -21,12 +33,18 @@ export function useParticipants(roomId: string | null) {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'participants', filter: `room_id=eq.${roomId}` },
-        load
+        () => { load(); }
       )
-      .subscribe();
+      .subscribe((status: string) => {
+        // 구독 완료 시점에 한 번 더 fetch — subscribe 이전 발생한 변경 누락 방지
+        if (status === 'SUBSCRIBED') load();
+      });
 
-    return () => { sb.removeChannel(channel); };
+    return () => {
+      cancelled = true;
+      sb.removeChannel(channel);
+    };
   }, [roomId]);
 
-  return participants;
+  return { participants, isLoading };
 }
