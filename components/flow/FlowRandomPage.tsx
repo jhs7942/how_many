@@ -42,6 +42,10 @@ export default function FlowRandomPage({
   const [isSpinning, setIsSpinning] = useState(false);
   const [done, setDone] = useState(false);
   const [testMode, setTestMode] = useState(false);
+  const [respinMessage, setRespinMessage] = useState(false);
+  const resultTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => () => clearTimeout(resultTimerRef.current), []);
 
   useEffect(() => {
     const c = session.get<Candidate[]>(sessionKeys.candidates) ?? [];
@@ -75,7 +79,15 @@ export default function FlowRandomPage({
     } catch {
       // DB 저장 실패해도 결과는 보여줌
     }
-    router.push(resultHref);
+    const RESULT_DELAY: Record<string, number> = {
+      spin: 1200,
+      shuffle: 800,
+      slot: 800,
+      rope: 800,
+    };
+    resultTimerRef.current = setTimeout(() => {
+      router.push(resultHref);
+    }, RESULT_DELAY[gameType!] ?? 1000);
   }
 
   async function handleSpin() {
@@ -180,11 +192,27 @@ export default function FlowRandomPage({
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 32 }}>
         {gameType === 'spin' && (
           <>
+            {respinMessage && (
+              <div style={{
+                padding: '8px 20px',
+                background: 'var(--color-primary)',
+                borderRadius: 20,
+                fontSize: 15,
+                fontWeight: 700,
+                color: '#fff',
+              }}>
+                🔄 한 번 더!
+              </div>
+            )}
             <SpinWheel
               ref={spinRef}
               segments={candidates}
               onResult={(result) => handleResult(result)}
               enableRespin={true}
+              onRespin={() => {
+                setRespinMessage(true);
+                setIsSpinning(true);
+              }}
             />
             <button
               data-testid="btn-spin"

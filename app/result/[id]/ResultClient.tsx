@@ -89,6 +89,51 @@ export default function ResultClient({ id }: { id: string }) {
           )}
         </div>
 
+        {result.location && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => window.open(`https://map.kakao.com/?q=${encodeURIComponent(`${result.location} ${result.winner_label}`)}`)}
+              style={{
+                flex: 1,
+                padding: '14px 16px',
+                borderRadius: 16,
+                background: '#FAE100',
+                color: '#3C1E1E',
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: 'var(--shadow)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+              }}
+            >
+              🗺️ 카카오지도
+            </button>
+            <button
+              onClick={() => window.open(`https://map.naver.com/v5/search/${encodeURIComponent(`${result.location} ${result.winner_label}`)}`)}
+              style={{
+                flex: 1,
+                padding: '14px 16px',
+                borderRadius: 16,
+                background: '#03C75A',
+                color: '#fff',
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: 'var(--shadow)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+              }}
+            >
+              🗺️ 네이버지도
+            </button>
+          </div>
+        )}
+
         <button
           onClick={() => router.push('/')}
           style={{

@@ -13,8 +13,8 @@ export default function FoodSettingPage() {
       title="맛집 결정"
       description="어떻게 메뉴를 정할까요?"
       options={[
-        { mode: 'default', emoji: '🍽️', title: '추천 메뉴로 뽑기', desc: '인기 음식 카테고리 중 랜덤으로' },
-        { mode: 'custom', emoji: '✏️', title: '직접 입력하기', desc: '먹고 싶은 메뉴를 직접 입력' },
+        { mode: 'default', emoji: '🍽️', title: '추천 메뉴로 뽑기', desc: '한식, 중식, 양식 등\n인기 카테고리에서 랜덤 추천' },
+        { mode: 'custom', emoji: '✏️', title: '직접 입력하기', desc: '먹고 싶은 메뉴를 직접 적고\n랜덤으로 하나를 뽑아요' },
       ]}
       onSelect={(mode) => {
         session.set('foodMode', mode);

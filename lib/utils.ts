@@ -18,10 +18,8 @@ export function generateRoomCode(): string {
 export function pickGameType(count: number): 'spin' | 'shuffle' | 'slot' | 'rope' {
   const r = Math.random();
   if (count >= 7) {
-    // rope는 줄이 너무 많으면 화면 공간 부족 → 제외
-    if (r < 0.4) return 'spin';
-    if (r < 0.6) return 'shuffle';
-    return 'slot';
+    // rope는 줄이 많으면 화면 부족, shuffle은 컵이 작아져 가독성 저하 → 둘 다 제외
+    return r < 0.5 ? 'spin' : 'slot';
   }
   if (r < 0.25) return 'spin';
   if (r < 0.5) return 'shuffle';

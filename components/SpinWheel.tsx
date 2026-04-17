@@ -13,17 +13,21 @@ interface SpinWheelProps {
   onResult: (result: { label: string; emoji: string }, index: number) => void;
   seed?: number;
   enableRespin?: boolean;
+  onRespin?: () => void;
 }
 
 
 const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(
-  ({ segments, onResult, enableRespin }, ref) => {
+  ({ segments, onResult, enableRespin, onRespin }, ref) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const respinTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const stateRef = useRef({
       currentAngle: 0,
       isSpinning: false,
       resultIndex: -1,
     });
+
+    useEffect(() => () => clearTimeout(respinTimerRef.current), []);
 
     const SIZE = 280;
 
@@ -65,11 +69,13 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(
         const resultIndex = Math.floor(Math.random() * segments.length);
         spinToIndex(resultIndex, (idx) => {
           if (enableRespin && Math.random() < 0.5) {
-            // 랜덤의 랜덤: 재회전
-            const newIndex = Math.floor(Math.random() * segments.length);
-            spinToIndex(newIndex, (finalIdx) => {
-              onResult(segments[finalIdx], finalIdx);
-            });
+            onRespin?.();
+            respinTimerRef.current = setTimeout(() => {
+              const newIndex = Math.floor(Math.random() * segments.length);
+              spinToIndex(newIndex, (finalIdx) => {
+                onResult(segments[finalIdx], finalIdx);
+              });
+            }, 600);
           } else {
             onResult(segments[idx], idx);
           }

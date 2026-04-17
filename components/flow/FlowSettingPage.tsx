@@ -65,7 +65,7 @@ export default function FlowSettingPage({
               <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-text)', marginBottom: 4 }}>
                 {opt.title}
               </div>
-              <div style={{ fontSize: 13, color: '#888' }}>
+              <div style={{ fontSize: 13, color: '#888', whiteSpace: 'pre-line', lineHeight: 1.5 }}>
                 {opt.desc}
               </div>
             </button>

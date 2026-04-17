@@ -10,7 +10,7 @@ interface SlotMachineProps {
   onResult: (index: number) => void;
 }
 
-type GameState = 'idle' | 'pulling' | 'spinning' | 'result';
+type GameState = 'idle' | 'pulling' | 'spinning' | 'nearMiss' | 'result';
 
 const REEL_H = 216;        // 가시 영역 높이 (ITEM_H × 3)
 const ITEM_H = 72;         // 릴 아이템 1개 높이
@@ -40,11 +40,15 @@ export default function SlotMachine({
   const cancelledRef = useRef(false);
   const gameStateRef = useRef<GameState>('idle');
   gameStateRef.current = gameState;
+  const reelOffsetsRef = useRef(reelOffsets);
+  useEffect(() => { reelOffsetsRef.current = reelOffsets; }, [reelOffsets]);
+  const nearMissTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     return () => {
       cancelledRef.current = true;
       rafIds.current.forEach(cancelAnimationFrame);
+      clearTimeout(nearMissTimerRef.current);
     };
   }, []);
 
@@ -67,6 +71,16 @@ export default function SlotMachine({
     const actualSeed = seed ?? Math.floor(Math.random() * 2147483647);
     const rng = mulberry32(actualSeed);
     const resolvedIdx = forceIdx ?? externalResultIndex ?? Math.floor(rng() * n);
+    const doNearMiss = n > 2 && rng() < 0.4;
+
+    let reelTargets: number[];
+    if (doNearMiss) {
+      let wrongIdx = Math.floor(rng() * (n - 1));
+      if (wrongIdx >= resolvedIdx) wrongIdx++;
+      reelTargets = [resolvedIdx, resolvedIdx, wrongIdx];
+    } else {
+      reelTargets = [resolvedIdx, resolvedIdx, resolvedIdx];
+    }
 
     setResultIdx(resolvedIdx);
     setGameState('spinning');
@@ -77,9 +91,8 @@ export default function SlotMachine({
 
     [0, 1, 2].forEach((reelIdx) => {
       const duration = REEL_DURATION + reelIdx * REEL_STAGGER;
-      // 각 릴은 서로 다른 랩 수를 돌아 속도감 다양화
-      const laps = 5 + reelIdx; // 릴 0: 5바퀴, 릴 1: 6바퀴, 릴 2: 7바퀴
-      const endDisplayIdx = n * laps + resolvedIdx;
+      const laps = 5 + reelIdx;
+      const endDisplayIdx = n * laps + reelTargets[reelIdx];
       const startY = CENTER_OFFSET;
       const endY = -endDisplayIdx * ITEM_H + CENTER_OFFSET;
 
@@ -92,7 +105,6 @@ export default function SlotMachine({
         const elapsed = now - startTime;
         const t = Math.min(elapsed / duration, 1);
 
-        // 2단계 이징: 선형 고속(0~70%) → easeOut 감속(70~100%)
         let eased: number;
         if (t < 0.7) {
           eased = (t / 0.7) * 0.75;
@@ -123,14 +135,60 @@ export default function SlotMachine({
           });
           stoppedCount++;
           if (stoppedCount === 3) {
-            setGameState('result');
-            onResult(resolvedIdx);
+            if (doNearMiss) {
+              setGameState('nearMiss');
+              nearMissTimerRef.current = setTimeout(() => {
+                if (cancelledRef.current) return;
+                retryLastReel(resolvedIdx);
+              }, 1200);
+            } else {
+              setGameState('result');
+              onResult(resolvedIdx);
+            }
           }
         }
       }
 
       rafIds.current.push(requestAnimationFrame(frame));
     });
+  }
+
+  function retryLastReel(targetIdx: number) {
+    setStoppedReels([true, true, false]);
+    setGameState('spinning');
+
+    const duration = 1800;
+    const laps = 3;
+    const endDisplayIdx = n * laps + targetIdx;
+    const startY = reelOffsetsRef.current[2];
+    const endY = -endDisplayIdx * ITEM_H + CENTER_OFFSET;
+
+    let startTime: number | null = null;
+
+    function frame(now: number) {
+      if (cancelledRef.current) return;
+      if (startTime === null) startTime = now;
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+
+      setReelOffsets(prev => {
+        const next = [...prev];
+        next[2] = startY + (endY - startY) * eased;
+        return next;
+      });
+
+      if (t < 1) {
+        rafIds.current.push(requestAnimationFrame(frame));
+      } else {
+        setReelOffsets(prev => { const next = [...prev]; next[2] = endY; return next; });
+        setStoppedReels([true, true, true]);
+        setGameState('result');
+        onResult(targetIdx);
+      }
+    }
+
+    rafIds.current.push(requestAnimationFrame(frame));
   }
 
   function onLeverDown(e: React.PointerEvent) {
@@ -169,6 +227,7 @@ export default function SlotMachine({
         {gameState === 'idle' && '🎰 레버를 당겨보세요!'}
         {gameState === 'pulling' && '⬇️ 더 당겨요...'}
         {gameState === 'spinning' && '🎲 두구두구...'}
+        {gameState === 'nearMiss' && '😮 아깝다! 한 번 더...'}
         {gameState === 'result' && '🎉 잭팟!'}
       </p>
 

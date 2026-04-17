@@ -176,7 +176,7 @@ export default function FlowDetailResultPage({
               boxShadow: '0 4px 16px rgba(255,122,61,0.35)',
             }}
           >
-            결과 공유하기 📤
+            링크 복사 📤
           </button>
           <button
             onClick={() => router.push(retryHref)}
@@ -191,7 +191,7 @@ export default function FlowDetailResultPage({
               border: '2px solid var(--color-primary)',
             }}
           >
-            다시 선택 🔄
+            다시 돌리기 🔄
           </button>
           <button
             onClick={() => router.push('/')}

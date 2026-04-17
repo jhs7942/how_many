@@ -11,14 +11,16 @@ interface CandidateEditorProps {
   candidates: Candidate[];
   onChange: (candidates: Candidate[]) => void;
   maxCount?: number;
+  emojiSet?: string[];
 }
 
-const EMOJIS = ['🍕', '🎬', '🎮', '🏃', '🎵', '☕', '🍻', '🎲', '🎤', '🏊'];
+const DEFAULT_EMOJIS = ['🍕', '🎬', '🎮', '🏃', '🎵', '☕', '🍻', '🎲', '🎤', '🏊'];
 
 export default function CandidateEditor({
   candidates,
   onChange,
   maxCount = 8,
+  emojiSet,
 }: CandidateEditorProps) {
   const [input, setInput] = useState('');
   const [duplicateWarning, setDuplicateWarning] = useState(false);
@@ -33,7 +35,8 @@ export default function CandidateEditor({
       return;
     }
     setDuplicateWarning(false);
-    const emoji = EMOJIS[candidates.length % EMOJIS.length];
+    const emojis = emojiSet ?? DEFAULT_EMOJIS;
+    const emoji = emojis[candidates.length % emojis.length];
     onChange([...candidates, { label, emoji }]);
     setInput('');
     inputRef.current?.focus();

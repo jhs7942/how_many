@@ -10,6 +10,7 @@ export default function FoodCustomPage() {
       backHref="/food/setting"
       nextHref="/food/location"
       sessionKey="foodCandidates"
+      emojiSet={['🍕', '🍜', '🍣', '🍔', '🍗', '🥗', '🍰', '🌮', '🍱', '☕']}
     />
   );
 }

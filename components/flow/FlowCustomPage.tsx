@@ -18,6 +18,7 @@ interface FlowCustomPageProps {
   backHref: string;
   nextHref: string;
   sessionKey: string; // 예: 'soloCandidates' | 'foodCandidates'
+  emojiSet?: string[];
 }
 
 // 후보 편집 + 프리셋 선택 화면
@@ -29,6 +30,7 @@ export default function FlowCustomPage({
   backHref,
   nextHref,
   sessionKey,
+  emojiSet,
 }: FlowCustomPageProps) {
   const router = useRouter();
   const [candidates, setCandidates] = useState<Candidate[]>(
@@ -75,7 +77,7 @@ export default function FlowCustomPage({
           title={presetTitle}
         />
 
-        <CandidateEditor candidates={candidates} onChange={setCandidates} maxCount={MAX_COUNT} />
+        <CandidateEditor candidates={candidates} onChange={setCandidates} maxCount={MAX_COUNT} emojiSet={emojiSet} />
       </div>
 
       <button
