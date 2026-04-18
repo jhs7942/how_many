@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import PageLayout from '@/components/PageLayout';
 import Toast, { useToast } from '@/components/Toast';
 import { session } from '@/lib/session';
-import { copyToClipboard, getAppBaseUrl } from '@/lib/utils';
+import { copyToClipboard, getAppBaseUrl, openMap } from '@/lib/utils';
 import { sendKakaoMessage } from '@/lib/kakao';
 import { getResultByRoomId } from '@/lib/api/results';
 import { getRoomCandidates } from '@/lib/api/rooms';
@@ -70,12 +70,8 @@ export default function GroupResultPage() {
 
   function handleMapSearch(service: 'kakao' | 'naver') {
     if (!result) return;
-    const query = result.winner_label;
-    if (service === 'kakao') {
-      window.open(`https://map.kakao.com/?q=${encodeURIComponent(query)}`);
-    } else {
-      window.open(`https://map.naver.com/v5/search/${encodeURIComponent(query)}`);
-    }
+    const ok = openMap(service, result.winner_label);
+    if (!ok) showToast('팝업 차단을 해제해주세요');
   }
 
   if (!result) {

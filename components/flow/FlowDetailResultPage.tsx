@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BackButton from '@/components/BackButton';
+import MapButton from '@/components/MapButton';
 import PageLayout from '@/components/PageLayout';
 import Toast, { useToast } from '@/components/Toast';
 import { session } from '@/lib/session';
@@ -53,16 +54,6 @@ export default function FlowDetailResultPage({
     }
     await copyToClipboard(`${getAppBaseUrl()}/result/${detailResultId}`);
     showToast('공유 링크가 복사됐어요!');
-  };
-
-  const handleMapSearch = (mapType: 'kakao' | 'naver') => {
-    if (!detail || !parentActivity) return;
-    const query = encodeURIComponent(`${parentActivity.label} ${detail.label}`);
-    const url =
-      mapType === 'kakao'
-        ? `https://map.kakao.com/?q=${query}`
-        : `https://map.naver.com/v5/search/${query}`;
-    window.open(url, '_blank');
   };
 
   if (!parentActivity || !detail) return null;
@@ -123,42 +114,16 @@ export default function FlowDetailResultPage({
 
         {/* 지도 검색 버튼 */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <button
-            onClick={() => handleMapSearch('kakao')}
-            style={{
-              padding: '14px 16px',
-              borderRadius: 16,
-              background: '#FAE100',
-              color: '#3C1E1E',
-              fontSize: 14,
-              fontWeight: 700,
-              boxShadow: 'var(--shadow-DEFAULT)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-            }}
-          >
-            🗺️ 카카오지도
-          </button>
-          <button
-            onClick={() => handleMapSearch('naver')}
-            style={{
-              padding: '14px 16px',
-              borderRadius: 16,
-              background: '#03C75A',
-              color: '#fff',
-              fontSize: 14,
-              fontWeight: 700,
-              boxShadow: 'var(--shadow-DEFAULT)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-            }}
-          >
-            🗺️ 네이버지도
-          </button>
+          <MapButton
+            service="kakao"
+            query={`${parentActivity.label} ${detail.label}`}
+            onBlocked={() => showToast('팝업 차단을 해제해주세요')}
+          />
+          <MapButton
+            service="naver"
+            query={`${parentActivity.label} ${detail.label}`}
+            onBlocked={() => showToast('팝업 차단을 해제해주세요')}
+          />
         </div>
 
         {/* 버튼 영역 */}

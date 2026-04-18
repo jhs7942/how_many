@@ -38,6 +38,22 @@ export function getAppBaseUrl(): string {
   return origin;
 }
 
+// 외부 지도 서비스 종류
+export type MapService = 'kakao' | 'naver';
+
+// 외부 지도 서비스를 새 탭에서 연다.
+// 팝업 차단을 감지해 boolean 반환 — 호출부가 토스트 등 사용자 피드백을 띄울 수 있도록.
+export function openMap(service: MapService, query: string): boolean {
+  const encoded = encodeURIComponent(query);
+  const url =
+    service === 'kakao'
+      ? `https://map.kakao.com/?q=${encoded}`
+      : `https://map.naver.com/v5/search/${encoded}`;
+  const popup = window.open(url, '_blank');
+  if (!popup || popup.closed) return false;
+  return true;
+}
+
 // 클립보드 복사 (Capacitor 네이티브 우선, 웹 폴백)
 export async function copyToClipboard(text: string): Promise<void> {
   try {
