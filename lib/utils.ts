@@ -54,12 +54,6 @@ export function openMap(service: MapService, query: string): boolean {
   return true;
 }
 
-// 파일명 안전 문자만 허용 (한글, 영문, 숫자, 하이픈)
-// 사용자 입력이 파일명에 포함될 때 경로 탐색·특수문자 문제 방지
-export function sanitizeFilename(raw: string): string {
-  return raw.replace(/[^가-힣a-zA-Z0-9-]/g, '_');
-}
-
 // 클립보드 복사 (Capacitor 네이티브 우선, 웹 폴백)
 export async function copyToClipboard(text: string): Promise<void> {
   try {
