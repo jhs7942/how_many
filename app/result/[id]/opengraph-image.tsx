@@ -5,7 +5,9 @@ import foodTipsJson from '@/assets/data/food-tips.json';
 import { SHARE_CARD } from '@/lib/constants/shareCard';
 import { loadPretendard } from '@/lib/og/loadFont';
 
-export const runtime = 'edge';
+// Vercel Hobby는 Edge Function 번들 1MB 한도가 있어 Satori + wasm + 폰트를 담을 수 없음.
+// Node.js Serverless(한도 50MB)로 실행해 한도 내에서 동작.
+export const runtime = 'nodejs';
 export const alt = '몇명이니 결과 카드';
 export const size = { width: SHARE_CARD.width, height: SHARE_CARD.height };
 export const contentType = 'image/png';

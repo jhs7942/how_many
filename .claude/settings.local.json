@@ -174,7 +174,9 @@
       "mcp__google-play-console__publish_managed_release",
       "mcp__google-play-console__get_testers",
       "Bash(awk '{print $NF}')",
-      "Bash(mkdir *)"
+      "Bash(mkdir *)",
+      "Bash(xargs du *)",
+      "Bash(find /Users/jeonghyeonseung/개발/how_many/.next/server -name 'route.js.nft.json' -path '*opengraph-image*' -exec cat {} \\\\;)"
     ]
   }
 }
