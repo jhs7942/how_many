@@ -33,9 +33,9 @@ export async function sendKakaoMessage(params: {
     const { Capacitor } = await import('@capacitor/core');
     if (Capacitor.isNativePlatform()) {
       const { Share } = await import('@capacitor/share');
+      // URL만 전달 → 카카오톡이 OG 메타 자동 미리보기 카드로만 표시
+      // text·title을 함께 넘기면 카카오가 일반 텍스트 메시지로 받아 카드 위에 긴 문자열이 남음
       await Share.share({
-        title: params.title,
-        text: `${params.description}\n${params.linkUrl}`,
         url: params.linkUrl,
         dialogTitle: '공유하기',
       });
