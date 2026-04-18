@@ -162,6 +162,17 @@ NEXT_PUBLIC_APP_URL=https://how-many-mauve.vercel.app
 - **트랙 정책**: 내부 테스트 트랙 = dev URL 빌드, 프로덕션 트랙 = prod URL 빌드
 - **versionCode 규칙**: dev/prod 모두 같은 `applicationId`를 사용하므로, versionCode는 **전역 단조 증가**해야 한다 (dev 10 → prod 11 → dev 12 ...). Play Console이 동일 앱의 모든 트랙에서 versionCode 유일성을 요구함.
 
+#### Play Console 앱 서명 (App Signing by Google Play)
+
+- **서명 구조**: **B 시나리오** (2026-04-18 확정) — 업로드 키와 앱 서명 키가 분리된 표준 구조
+- **앱 서명 키**: Google Cloud KMS에 보관. 개발자 접근 불가. 사용자 기기가 설치 시 검증하는 최종 서명
+  - SHA-1: `38:3C:46:46:21:5D:E0:2F:3E:36:AA:B7:42:FC:F1:7D:2A:E1:B6:19`
+- **업로드 키**: 로컬 `android/howmany-release.keystore`. AAB를 Play Console에 올릴 때만 사용
+  - SHA-1: `41:12:99:70:DC:37:EF:CC:E5:6A:E2:C7:FD:B4:89:18:B9:06:58:74`
+- **분실/유출 대응**: Play Console → 앱 서명 → "업로드 키 재설정 요청"으로 복구 가능. 앱 서명 키는 Google이 영구 보관하므로 사용자 기기 업데이트 영향 없음
+- **Play Console 직링크**: `https://play.google.com/console/u/0/developers/7962901105868160912/app/4974062925009946290/keymanagement`
+- **상세 학습 노트**: `.claude/study/2026-04-18/app-signing-by-google-play.md`
+
 ### 브랜치 전략
 
 ```

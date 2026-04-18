@@ -13,7 +13,7 @@ sync_mode: enabled
 sync_target: linear
 current_issue_id: HM-24
 current_issue_identifier: HM-24
-last_sync_at: "2026-04-18"
+last_sync_at: "2026-04-18T23:46Z"
 last_pull_hash: null
 
 state_map:

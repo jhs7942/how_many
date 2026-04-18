@@ -22,7 +22,8 @@
       "Bash(cmd //c \"gradlew.bat bundleRelease\")",
       "Bash(cmd //c \".\\\\\\\\gradlew.bat bundleRelease\")",
       "Bash(cmd:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" ./gradlew bundleRelease:*)"
     ]
   }
 }
