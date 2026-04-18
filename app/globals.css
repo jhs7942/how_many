@@ -104,7 +104,7 @@ input {
   50% { transform: translateY(-8px); }
 }
 
-@keyframes spinAnim {
+@keyframes spin {
   to { transform: rotate(360deg); }
 }
 

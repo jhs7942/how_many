@@ -109,4 +109,37 @@ test.describe('Solo 플로우', () => {
     await expect(page.getByTestId('result-card')).not.toBeVisible({ timeout: 10000 });
     await expect(page.getByTestId('btn-mode-default')).toBeVisible({ timeout: 10000 });
   });
+
+  // [신규] HM-21 공유 카드 미리보기 모달 테스트
+  test('[HM-21] 공유 버튼 클릭 시 미리보기 모달이 열린다', async ({ page }) => {
+    await page.addInitScript(() => {
+      sessionStorage.setItem('activity', JSON.stringify({ label: '카페', emoji: '☕' }));
+    });
+    await page.goto('/solo/result');
+    await expect(page.getByTestId('result-card')).toBeVisible({ timeout: 5000 });
+
+    // btn-share 클릭 → SharePreviewModal 노출 (이미지 생성 중 상태 포함)
+    await page.getByTestId('btn-share').click();
+
+    // role="dialog" 를 가진 SharePreviewModal 이 나타나야 함
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 });
+  });
+
+  test('[HM-21] 미리보기 모달 닫기 버튼 클릭 시 모달이 사라진다', async ({ page }) => {
+    await page.addInitScript(() => {
+      sessionStorage.setItem('activity', JSON.stringify({ label: '카페', emoji: '☕' }));
+    });
+    await page.goto('/solo/result');
+    await expect(page.getByTestId('result-card')).toBeVisible({ timeout: 5000 });
+
+    // 모달 열기
+    await page.getByTestId('btn-share').click();
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 });
+
+    // '닫기' 버튼 클릭
+    await page.getByRole('dialog').getByRole('button', { name: '닫기' }).click();
+
+    // 모달이 사라져야 함
+    await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 3000 });
+  });
 });

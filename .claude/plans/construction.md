@@ -632,3 +632,273 @@ sessionStorage 키 목록에 신규 키 추가:
 | `foodResultId` | food/random | food/result |
 | `foodDetailActivity` | food/detail/random | food/detail/result |
 | `foodDetailResultId` | food/detail/random | food/detail/result |
+
+---
+
+## Part 3. HM-21 결과 공유 카드 이미지화 1단계 (2026-04-18)
+
+Linear 이슈: HM-21
+대응 plan: `.claude/plans/plan.md` (2026-04-18 작성본)
+
+### 1. 아키텍처 개요
+
+결과 페이지(`FlowResultPage`)의 "공유" 액션이 다음 5개 모듈을 경유해 이미지 생성 → 미리보기 → 네이티브 Share Sheet 전달을 수행한다.
+
+```
+FlowResultPage
+   │  activity, tipData
+   ▼
+[공유 버튼 onClick]
+   │
+   ▼
+useShareImage (훅)
+   │  ①오프스크린 DOM 마운트
+   │  ②html-to-image로 PNG 생성
+   │  ③Blob 반환
+   ▼
+SharePreviewModal (컴포넌트)
+   │  사용자 확인
+   ▼
+useShareImage.share()
+   │  분기:
+   │   - Capacitor: Filesystem.writeFile(Cache) → Share.share({files:[uri]}) → 임시파일 정리
+   │   - Web: navigator.share({files:[File]}) → 미지원 시 <a download> fallback
+   ▼
+OS Share Sheet → 사용자 선택(카톡·갤러리·...)
+```
+
+### 2. 파일 구조
+
+| 파일 | 역할 | 신규/수정 |
+|---|---|---|
+| `lib/hooks/useShareImage.ts` | 이미지 생성·공유 공용 훅 | 신규 |
+| `components/ShareCard.tsx` | 오프스크린 공유 카드 DOM (1080×1080) | 신규 |
+| `components/SharePreviewModal.tsx` | 공유 전 미리보기 모달 | 신규 |
+| `lib/constants/shareCard.ts` | 카드 스타일 상수 (색상·크기·폰트) | 신규 |
+| `components/flow/FlowResultPage.tsx` | "공유" 버튼 훅업, 기존 "링크 복사" 버튼 흡수 | 수정 |
+| `package.json` | `html-to-image`, `@capacitor/filesystem` 추가 | 수정 |
+
+### 3. 공용 훅 인터페이스 — `useShareImage`
+
+```ts
+// lib/hooks/useShareImage.ts
+interface ShareCardData {
+  emoji: string;        // activity.emoji
+  label: string;        // activity.label
+  tip?: string;         // tipData에서 찾은 팁 (없으면 undefined)
+}
+
+interface UseShareImageReturn {
+  generate: (data: ShareCardData) => Promise<Blob>;
+  share: (blob: Blob, filename?: string) => Promise<void>;
+  isGenerating: boolean;
+  isSharing: boolean;
+  error: ShareError | null;
+}
+
+type ShareError =
+  | { kind: 'render_failed'; cause: unknown }
+  | { kind: 'permission_denied' }
+  | { kind: 'save_failed'; cause: unknown }
+  | { kind: 'share_unsupported' };
+
+export function useShareImage(): UseShareImageReturn;
+```
+
+- `generate`: `ShareCard` DOM을 offscreen에 마운트하고 `html-to-image.toBlob()` 호출. `await import('html-to-image')` 동적 import로 초기 번들 제외
+- `share`: Capacitor/Web 환경 분기. 실패 시 `ShareError` 반환
+
+### 4. 공유 카드 컴포넌트 — `ShareCard`
+
+팁 유무에 따른 분기 레이아웃을 단일 컴포넌트 내에 구현한다.
+
+```tsx
+// components/ShareCard.tsx
+interface ShareCardProps {
+  emoji: string;
+  label: string;
+  tip?: string;  // undefined → 팁 영역 숨김 + 수직 중앙 재배치
+}
+```
+
+- **offscreen 마운트**: `position: fixed; left: -99999px; top: 0;` + `ref` — 렌더 타겟 용도만
+- **고정 크기**: `width: 1080px; height: 1080px;` (디바이스 뷰포트 무관)
+- **레이아웃 분기**:
+  - `tip` 있음: 이모지(520px) · 컨텐츠명(128px) · 팁(44px, line-clamp:2) 수직 배열
+  - `tip` 없음: 이모지 + 컨텐츠명을 수직 중앙 정렬
+
+### 5. 미리보기 모달 — `SharePreviewModal`
+
+```tsx
+interface SharePreviewModalProps {
+  blob: Blob | null;         // null이면 생성 중
+  onConfirm: () => void;     // Share Sheet 트리거
+  onClose: () => void;
+  isSharing: boolean;        // 공유 중 버튼 disabled
+}
+```
+
+- `URL.createObjectURL(blob)`로 `<img src>` 표시, 언마운트 시 `revokeObjectURL`
+- 포커스 트랩 + ESC 닫기 (NF3 접근성)
+- 모달 외곽 탭으로 닫기 허용
+
+### 6. 스타일 상수 — `lib/constants/shareCard.ts`
+
+```ts
+export const SHARE_CARD = {
+  width: 1080,
+  height: 1080,
+  bg: 'linear-gradient(135deg, #FF7A3D 0%, #FF9A6C 100%)',
+  emoji: { size: 520 },
+  label: { size: 128, weight: 800, color: '#FFFFFF' },
+  tip:   { size: 44,  color: 'rgba(255,255,255,0.8)', maxLines: 2 },
+  padding: 80,
+} as const;
+```
+
+화면 카드(`FlowResultPage` result-card)는 이 상수를 **참조하지 않음** — 공유 카드 전용.
+
+### 7. 데이터 플로우
+
+```
+FlowResultPage
+  activity = session.get<{label,emoji}>(sessionKeys.activity)
+  tip = tipData ? (tipData[activity.label] ?? tipData['default']) : undefined
+
+  onClick(공유):
+    blob = await generate({ emoji, label, tip })
+    openPreview(blob)
+    onConfirm:
+      await share(blob, `howmany-${activity.label}.png`)
+```
+
+- `tipData` 자체가 `undefined`인 경로(Group 등)에서는 `tip`도 `undefined` → `ShareCard`에서 팁 영역 숨김 분기
+- 1단계에서 Solo만 사용하므로 실제 `tipData` 항상 있음. Food/Group 확장 시 경로 검증 필요
+
+### 8. 플랫폼 분기 상세
+
+#### Web (`navigator.share` 지원 브라우저)
+
+```ts
+const file = new File([blob], filename, { type: 'image/png' });
+if (navigator.canShare?.({ files: [file] })) {
+  await navigator.share({ files: [file] });
+} else {
+  // fallback: <a download>
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+```
+
+#### Capacitor (Android)
+
+```ts
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+
+const base64 = await blobToBase64(blob);
+const result = await Filesystem.writeFile({
+  path: filename,
+  data: base64,
+  directory: Directory.Cache,
+});
+await Share.share({
+  files: [result.uri],
+  dialogTitle: '결과 공유',
+});
+await Filesystem.deleteFile({ path: filename, directory: Directory.Cache });
+```
+
+- `Directory.Cache` — Android 15 Scoped Storage 대응. 앱 전용 임시 공간이라 권한 불필요
+- 공유 후 즉시 삭제로 누적 방지
+
+### 9. 라이브러리 선택 — 트레이드오프
+
+| 후보 | gzip | CSS 지원 | React 19 | 이모지 렌더 | 비고 |
+|---|---|---|---|---|---|
+| **html-to-image** ✅ | ~30KB | foreignObject 방식, 현대 CSS 양호 | OK | system emoji 정상 | 채택 |
+| html2canvas | ~45KB | Canvas 에뮬레이션, gradient 지원 제한 | OK | 일부 OS 깨짐 | |
+| dom-to-image-more | ~35KB | html-to-image와 유사 | 확인 안 됨 | 유사 | 유지보수 활발도 낮음 |
+| 서버사이드 Satori + OG | 0 (client) | React 컴포넌트 직접 렌더 | OK | 완벽 제어 | 인프라 필요 — HM-21-2로 분리 |
+
+**채택 근거**: `html-to-image`는 번들·품질·React 19 호환성·유지보수 활성도 전부 균형. linear-gradient 배경·시스템 이모지만 쓰는 본 작업 스펙에 제약 없음.
+
+### 10. 저장·공유 API 선택 — 트레이드오프
+
+| 접근 | Web | Android | 장점 | 단점 |
+|---|---|---|---|---|
+| **Share Sheet 통합** ✅ | `navigator.share` | `@capacitor/share` + `Filesystem` | 단일 API, 사용자 선택 범위 최대 | Web의 `navigator.share` 파일 지원 브라우저 제한 (fallback 필요) |
+| 직접 다운로드만 | `<a download>` | `Filesystem.writeFile(Documents)` | 구현 단순 | Android 15 Scoped Storage 권한 필요, UX 마찰 ↑ |
+| MediaStore 직접 | — | Custom native plugin | 갤러리 통합 완벽 | 네이티브 플러그인 개발 비용 |
+
+**채택 근거**: Share Sheet 경로가 Scoped Storage 우회 + UX 마찰 최소 + 카톡 등 SNS 직결. 웹 미지원 환경은 `<a download>` fallback.
+
+### 11. 에러 처리 매핑
+
+| `ShareError.kind` | 발생 지점 | 사용자 메시지 | 후속 동작 |
+|---|---|---|---|
+| `render_failed` | `html-to-image.toBlob` 예외 | "이미지 생성에 실패했어요" | 모달 닫기, 기존 링크 공유로 안내 |
+| `permission_denied` | Capacitor Share 취소 | (메시지 없음 — 사용자 의도) | 모달 유지 |
+| `save_failed` | `Filesystem.writeFile` 예외 | "저장에 실패했어요" | 모달 닫기 |
+| `share_unsupported` | 웹 `canShare` false + download도 실패 | "이 기기에서는 공유할 수 없어요" | 링크 복사 fallback |
+
+### 12. 번들 크기 제어
+
+- `html-to-image`는 `useShareImage` 내부에서 동적 import
+  ```ts
+  const { toBlob } = await import('html-to-image');
+  ```
+- 공유 버튼 첫 클릭 시점에 로드 → 초기 번들에 영향 없음
+- `@capacitor/filesystem`은 Capacitor 환경에서만 로드되도록 조건부 import (web 빌드 제외)
+
+### 13. 테스트 전략
+
+| 레이어 | 도구 | 범위 |
+|---|---|---|
+| 유닛 | — (브라우저 기능 의존) | 해당 없음 |
+| 컴포넌트 시각 | Playwright screenshot | `ShareCard` 팁 있음/없음/최장31자/default fallback 4 시나리오 |
+| E2E | Playwright | Solo 결과 → 공유 버튼 → 미리보기 모달 노출 확인 (다운로드는 실기기 검증) |
+| 실기기 | 수동 | Android AAB 설치 → Share Sheet → 카톡 대화방 전송 end-to-end |
+
+Playwright에서 `navigator.share` 자체는 테스트 제한적 — 미리보기 모달 노출·이미지 blob 생성 여부까지 자동화, OS Share Sheet 이후는 수동.
+
+### 14. 기존 `FlowResultPage` 수정 지점
+
+현재 버튼 영역 구조 (components/flow/FlowResultPage.tsx:145-240):
+
+```
+버튼 영역
+├─ [세부 뽑기] (optional)
+├─ [링크 복사] ← Share Sheet로 교체
+├─ [카카오 공유] ← 유지
+├─ [다시 돌리기]
+└─ [홈]
+```
+
+변경 후:
+
+```
+버튼 영역
+├─ [세부 뽑기] (optional)
+├─ [공유] (신규 — 이미지 생성 + Share Sheet) ← 기존 링크 복사 버튼 위치
+├─ [카카오 공유] ← 유지
+├─ [다시 돌리기]
+└─ [홈]
+```
+
+- `handleShare` 기존 로직은 훅으로 이관, 버튼 `onClick`에서 `useShareImage.generate → preview.open` 호출
+- 카카오 공유는 1단계에서 건드리지 않음 (서버 이미지 URL 필요, HM-21-2에서 해결)
+
+### 15. 1단계 완료 후 Food/Group 확장 시 변경점
+
+| 대상 | 필요한 변경 |
+|---|---|
+| `FlowResultPage`의 Food 진입점 | 동일한 버튼 훅업. 1단계에서 작업한 파일 그대로 재사용 |
+| `app/group/result/page.tsx` | 별도 컴포넌트이므로 `useShareImage` + `SharePreviewModal`을 직접 import. `tipData` 없으므로 자동으로 팁 숨김 레이아웃 적용 |
+| `ShareCard` | 수정 없음 — `tip: undefined` 분기가 이미 Group 용도를 커버함 |
+
+이 설계로 1단계 배포 후 확장 이슈(HM-21-F, HM-21-G)는 **버튼 훅업 변경만으로 완료**.
+
