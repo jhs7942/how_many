@@ -69,10 +69,13 @@ export default function FlowResultPage({
 
   const handleKakaoShare = async () => {
     if (!activity || !resultId) return;
-    const linkUrl = `${getAppBaseUrl()}/result/${resultId}`;
+    const base = getAppBaseUrl();
+    const linkUrl = `${base}/result/${resultId}`;
+    const imageUrl = `${base}/result/${resultId}/opengraph-image`;
     await sendKakaoMessage({
       title: `${resultTitle}: ${activity.emoji} ${activity.label}`,
       description: '몇명이니로 결정했어요! 같이 해볼까요?',
+      imageUrl,
       linkUrl,
       buttonText: '결과 보기',
     });

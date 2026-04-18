@@ -173,7 +173,8 @@
       "Bash(CAPACITOR_SERVER_URL=https://howmany-git-develop-jhs7942s-projects.vercel.app npm run build:android:dev)",
       "mcp__google-play-console__publish_managed_release",
       "mcp__google-play-console__get_testers",
-      "Bash(awk '{print $NF}')"
+      "Bash(awk '{print $NF}')",
+      "Bash(mkdir *)"
     ]
   }
 }

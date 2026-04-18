@@ -54,6 +54,8 @@ export async function sendKakaoMessage(params: {
       title: params.title,
       description: params.description,
       imageUrl: params.imageUrl ?? `${getAppBaseUrl()}/og-image.png`,
+      imageWidth: 1200,
+      imageHeight: 630,
       link: { mobileWebUrl: params.linkUrl, webUrl: params.linkUrl },
     },
     buttons: [{

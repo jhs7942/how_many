@@ -95,7 +95,17 @@ Linear 이슈 HM-21: "결과 공유 카드 이미지화 (SNS 바이럴)". 결과
 
 ## 상태
 
-Accepted (2026-04-18)
+**Superseded by `hm-21-og-image-satori.md` (2026-04-18)**
+
+최초 Accepted 된 당일 같은 날 번복됨. 이유:
+- 사용자가 기대한 UX 는 "카카오 Feed 썸네일에 결과 카드 노출"이었으나, 본 ADR 의 `html-to-image` + Share Sheet 조합으로는 카톡이 요구하는 **서버 공개 URL** 을 제공할 수 없어 달성 불가.
+- "카톡 미리보기는 HM-21-2 이후"로 이연한 것이 실제로는 **1단계 성공 기준 그 자체**였음.
+- 번복 조건 중 "이모지 OS 별 렌더 차이"도 Twemoji 강제로 해결하는 방향으로 재결정.
+
+재설계된 선택:
+- Next 16 `next/og` (내장 Satori) + Edge runtime + Supabase anon key + Pretendard + Twemoji
+- 1200×630 가로형(Meta OG 표준) 으로 비율 변경
+- 자세한 내용은 동일 디렉토리 `hm-21-og-image-satori.md` 참조
 
 ## 참조
 

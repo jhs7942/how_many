@@ -635,7 +635,12 @@ sessionStorage 키 목록에 신규 키 추가:
 
 ---
 
-## Part 3. HM-21 결과 공유 카드 이미지화 1단계 (2026-04-18)
+## Part 3. HM-21 결과 공유 카드 이미지화 1단계 (2026-04-18) — ⚠️ Deprecated
+
+> **Deprecated — 2026-04-18 롤백 (commit `1e5d1cd`)**.
+> 이 Part 3 는 클라이언트 `html-to-image` + `@capacitor/share` 파일 전송 기반의 1단계 설계다.
+> 실제 사용자가 기대한 UX 는 "카카오 Feed 썸네일에 카드가 노출"되는 것이었고, 현재 설계로는 달성 불가 → 전면 재설계됨.
+> 재설계 스펙은 **§ Part 4** 참조. 아래 내용은 이력으로만 보존한다. 재도입 금지.
 
 Linear 이슈: HM-21
 대응 plan: `.claude/plans/plan.md` (2026-04-18 작성본)
@@ -901,4 +906,355 @@ Playwright에서 `navigator.share` 자체는 테스트 제한적 — 미리보�
 | `ShareCard` | 수정 없음 — `tip: undefined` 분기가 이미 Group 용도를 커버함 |
 
 이 설계로 1단계 배포 후 확장 이슈(HM-21-F, HM-21-G)는 **버튼 훅업 변경만으로 완료**.
+
+---
+
+## Part 4. HM-21 재설계 — 카카오 Feed 썸네일 기반 OG 이미지 (2026-04-18)
+
+> Part 3 의 전면 대체. Linear 이슈: HM-21
+> 대응 plan: `.claude/plans/plan.md` (2026-04-18 재작성본)
+> 재설계 스크립트: `script.md` (프로젝트 루트)
+
+### 1. 아키텍처 개요
+
+카카오 Feed Template 의 `imageUrl` 은 **서버 공개 URL 에서 이미지를 가져오는 방식**이다. 따라서 `/result/{id}/opengraph-image` 라는 Edge route 를 두고, 카카오가 이 URL 로 GET 요청을 보냈을 때 1200×630 PNG 를 동적으로 응답한다.
+
+```
+[사용자 Android 앱] FlowResultPage "카카오 공유" onClick
+   │
+   ▼
+sendKakaoMessage({
+  imageUrl: https://how-many-mauve.vercel.app/result/{id}/opengraph-image,
+  imageWidth: 1200, imageHeight: 630,
+  link: { mobileWebUrl: .../result/{id}, webUrl: 동일 },
+  ...
+})
+   │
+   ▼
+[카카오 서버] imageUrl 로 GET 요청
+   │
+   ▼
+[Vercel Edge] app/result/[id]/opengraph-image.tsx
+   ① params.id 로 Supabase results 조회 (winner_label, winner_emoji)
+   ② tips.json 매칭으로 tip 획득
+   ③ Pretendard 폰트 fetch (캐시)
+   ④ Satori ImageResponse 1200×630 PNG 반환 (Cache-Control: 1y immutable)
+   │
+   ▼
+[카카오 서버] 수신한 PNG 를 Feed 썸네일로 첨부
+   │
+   ▼
+[수신자 카톡] Feed 메시지 썸네일 노출 → 클릭 시 link.mobileWebUrl 이동
+```
+
+추가로 `generateMetadata` 로 `<head>` 에 `og:image` 를 주입해 **카톡 대화방에 URL 을 텍스트로 붙여넣어도** 자동 미리보기 썸네일이 노출되게 한다.
+
+### 2. 파일 구조
+
+| 파일 | 역할 | 신규/수정 |
+|---|---|---|
+| `app/result/[id]/opengraph-image.tsx` | Edge route, 1200×630 PNG 응답 | 신규 |
+| `lib/og/loadFont.ts` | Pretendard 폰트 ArrayBuffer 로드 | 신규 |
+| `lib/constants/shareCard.ts` | 카드 크기·색상 상수 | 신규 (재설계 버전) |
+| `public/fonts/Pretendard-Regular.woff2` | 한글 폰트 (Regular) | 신규 |
+| `public/fonts/Pretendard-Bold.woff2` | 한글 폰트 (Bold) | 신규 |
+| `app/result/[id]/page.tsx` | `generateMetadata` 추가, Supabase 서버 조회 | 수정 |
+| `lib/kakao.ts` | Feed Template 에 `imageWidth`·`imageHeight` 명시 | 수정 |
+| `components/flow/FlowResultPage.tsx` | `handleKakaoShare` 에 절대 `imageUrl` 주입 | 수정 |
+| `next.config.ts` | `NEXT_STATIC_EXPORT=true` 시 opengraph-image 제외 | 수정 |
+
+### 3. Edge route — `app/result/[id]/opengraph-image.tsx`
+
+Next.js 16 App Router 의 파일 컨벤션. `opengraph-image.tsx` 는 동일 segment 의 OG 이미지를 담당한다.
+
+```tsx
+import { ImageResponse } from 'next/og';
+import { createClient } from '@supabase/supabase-js';
+import tipsJson from '@/assets/data/tips.json';
+import foodTipsJson from '@/assets/data/food-tips.json';
+import { loadPretendard } from '@/lib/og/loadFont';
+import { SHARE_CARD } from '@/lib/constants/shareCard';
+
+export const runtime = 'edge';
+export const alt = '몇명이니 결과 카드';
+export const size = { width: 1200, height: 630 };
+export const contentType = 'image/png';
+
+type Params = { params: Promise<{ id: string }> };
+
+export default async function OgImage({ params }: Params) {
+  const { id } = await params;
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  );
+  const { data } = await supabase
+    .from('results')
+    .select('winner_label, winner_emoji')
+    .eq('id', id)
+    .maybeSingle();
+
+  const label = data?.winner_label ?? '결과';
+  const emoji = data?.winner_emoji ?? '🎉';
+  const tip =
+    (tipsJson as Record<string, string>)[label]
+    ?? (foodTipsJson as Record<string, string>)[label]
+    ?? (tipsJson as Record<string, string>)['default']
+    ?? '몇명이니로 결정했어요!';
+
+  const [regular, bold] = await loadPretendard();
+
+  return new ImageResponse(
+    (
+      <div style={{
+        width: '100%', height: '100%',
+        display: 'flex', flexDirection: 'row', alignItems: 'center',
+        background: SHARE_CARD.bg,
+        padding: SHARE_CARD.padding,
+        fontFamily: 'Pretendard',
+      }}>
+        <div style={{
+          fontSize: SHARE_CARD.emoji.size,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: 420,
+        }}>
+          {emoji}
+        </div>
+        <div style={{
+          display: 'flex', flexDirection: 'column', flex: 1,
+          color: '#FFFFFF',
+        }}>
+          <div style={{ fontSize: SHARE_CARD.label.size, fontWeight: 700, lineHeight: 1.2 }}>
+            {label}
+          </div>
+          <div style={{
+            fontSize: SHARE_CARD.tip.size,
+            color: SHARE_CARD.tip.color,
+            lineHeight: 1.4, marginTop: 24,
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}>
+            {tip}
+          </div>
+        </div>
+      </div>
+    ),
+    {
+      ...size,
+      emoji: 'twemoji',
+      fonts: [
+        { name: 'Pretendard', data: regular, weight: 400, style: 'normal' },
+        { name: 'Pretendard', data: bold, weight: 700, style: 'normal' },
+      ],
+      headers: {
+        'Cache-Control': 'public, s-maxage=31536000, immutable',
+      },
+    },
+  );
+}
+```
+
+### 4. 폰트 로더 — `lib/og/loadFont.ts`
+
+Satori 는 `fonts` 옵션에 ArrayBuffer 를 요구한다. Edge runtime 은 `fs` 접근이 제한적이므로 `fetch` 로 `public/fonts/` 의 폰트를 동일 배포에서 가져온다.
+
+```ts
+let cache: [ArrayBuffer, ArrayBuffer] | null = null;
+
+export async function loadPretendard(): Promise<[ArrayBuffer, ArrayBuffer]> {
+  if (cache) return cache;
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://how-many-mauve.vercel.app';
+  const [regular, bold] = await Promise.all([
+    fetch(`${base}/fonts/Pretendard-Regular.woff2`).then(r => r.arrayBuffer()),
+    fetch(`${base}/fonts/Pretendard-Bold.woff2`).then(r => r.arrayBuffer()),
+  ]);
+  cache = [regular, bold];
+  return cache;
+}
+```
+
+- `cache` 는 Edge instance 생명주기 내 재사용. Vercel Edge 는 각 지역에서 warm state 유지 → 폰트 재fetch 최소화
+- `NEXT_PUBLIC_APP_URL` 로 fetch 하므로 Vercel preview/프로덕션 모두 동일 코드
+
+### 5. 스타일 상수 — `lib/constants/shareCard.ts`
+
+```ts
+export const SHARE_CARD = {
+  width: 1200,
+  height: 630,
+  bg: 'linear-gradient(135deg, #FF7A3D 0%, #FF9A6C 100%)',
+  emoji: { size: 360 },
+  label: { size: 96, weight: 700, color: '#FFFFFF' },
+  tip:   { size: 32, color: 'rgba(255,255,255,0.85)', maxLines: 2 },
+  padding: 80,
+} as const;
+```
+
+재설계 버전 — Part 3 의 1080×1080 상수는 재사용하지 않는다(롤백 대상). 이 파일은 신규 생성으로 취급.
+
+### 6. `generateMetadata` — `app/result/[id]/page.tsx`
+
+카톡 대화방에 URL 을 **텍스트로 붙여넣어도** 썸네일이 노출되도록 `<head>` 메타를 동적 주입.
+
+```ts
+import type { Metadata } from 'next';
+import { createClient } from '@supabase/supabase-js';
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ id: string }> },
+): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  );
+  const { data } = await supabase
+    .from('results')
+    .select('winner_label, winner_emoji')
+    .eq('id', id)
+    .maybeSingle();
+
+  const label = data?.winner_label ?? '결과';
+  const emoji = data?.winner_emoji ?? '🎉';
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://how-many-mauve.vercel.app';
+  const ogUrl = `${base}/result/${id}/opengraph-image`;
+
+  return {
+    title: `${emoji} ${label} — 몇명이니`,
+    description: '몇명이니로 결정했어요! 같이 해볼까요?',
+    openGraph: {
+      title: `${emoji} ${label}`,
+      description: '몇명이니로 결정했어요!',
+      images: [{ url: ogUrl, width: 1200, height: 630, alt: `${label} 결과 카드` }],
+      type: 'website',
+      url: `${base}/result/${id}`,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${emoji} ${label}`,
+      images: [ogUrl],
+    },
+  };
+}
+```
+
+- 기존 `generateStaticParams()` 는 정적 빌드용이므로 SSR/Edge 모드에서 공존 확인 필요
+- static export 모드에서는 이 함수도 빌드타임에 호출되지만 Supabase 호출이 실패하면 fallback 값 사용
+
+### 7. `lib/kakao.ts` 수정
+
+현재 `sendKakaoMessage` 는 `imageUrl` 을 받지만 `imageWidth`/`imageHeight` 를 지정하지 않는다. 카톡 Feed Template 명세에 맞게 추가한다.
+
+```ts
+window.Kakao.Share.sendDefault({
+  objectType: 'feed',
+  content: {
+    title: params.title,
+    description: params.description,
+    imageUrl: params.imageUrl ?? `${getAppBaseUrl()}/og-image.png`,
+    imageWidth: 1200,
+    imageHeight: 630,
+    link: { mobileWebUrl: params.linkUrl, webUrl: params.linkUrl },
+  },
+  buttons: [...],
+});
+```
+
+### 8. `FlowResultPage.tsx` 수정
+
+`handleKakaoShare` 에서 절대 URL 로 opengraph-image 경로를 전달.
+
+```ts
+const handleKakaoShare = async () => {
+  if (!activity || !resultId) return;
+  const base = getAppBaseUrl();
+  const linkUrl = `${base}/result/${resultId}`;
+  const imageUrl = `${base}/result/${resultId}/opengraph-image`;
+  await sendKakaoMessage({
+    title: `${resultTitle}: ${activity.emoji} ${activity.label}`,
+    description: '몇명이니로 결정했어요! 같이 해볼까요?',
+    imageUrl,
+    linkUrl,
+    buttonText: '결과 보기',
+  });
+};
+```
+
+### 9. Android Capacitor 빌드 충돌 회피 — `next.config.ts`
+
+```ts
+const isStaticExport = process.env.NEXT_STATIC_EXPORT === 'true';
+
+const nextConfig: NextConfig = {
+  output: isStaticExport ? 'export' : undefined,
+  pageExtensions: isStaticExport
+    ? ['page.tsx', 'page.ts', 'page.jsx', 'page.js']  // opengraph-image.tsx 제외
+    : ['tsx', 'ts', 'jsx', 'js'],
+  // ...기존 설정
+};
+```
+
+- **일반 모드 (Vercel)**: 모든 확장자 허용 → `opengraph-image.tsx` 가 Edge route 로 등록
+- **static export 모드 (Android)**: `page.*` 만 허용 → `opengraph-image.tsx` 무시, 빌드 통과
+- 단, Next 기본 파일명 규칙이 이미 `page.tsx`이므로 일반 페이지 파일에는 영향 없음. 만약 `layout.tsx`, `not-found.tsx`, `error.tsx` 같은 특수 파일이 있다면 배열에 추가 필요 → **Phase B 착수 시 프로젝트 전체 파일 목록 확인**
+
+### 10. Supabase Edge 호환성
+
+`@supabase/supabase-js` 는 Edge runtime 호환성을 공식 지원한다(v2 이상). 단 주의할 점:
+- `createClient` 를 **모듈 스코프가 아닌 함수 내부**에서 호출 (Edge worker lifecycle 대응)
+- Cookies/Session 관련 API 사용 금지 (anon 조회만)
+- RLS `results` SELECT 정책이 public 이어야 함 (MEMORY.md 상 이미 완료 상태)
+
+### 11. 에러 처리
+
+| 상황 | 응답 | UX 영향 |
+|---|---|---|
+| Supabase 조회 실패 | fallback 값("결과", "🎉", default tip)으로 렌더 | 카드는 노출되지만 구체 정보 없음 |
+| 폰트 fetch 실패 | Satori 기본 sans fallback | 한글 가독성 ↓, 최종 수단 |
+| 존재하지 않는 `id` | `maybeSingle()` null → fallback 값 렌더 | 2xx 응답 유지, 캐시 독 방지는 TTL 로 감수 |
+| Twemoji fetch 실패 | 시스템 이모지 fallback (Satori 기본 동작) | 카카오톡에서 빈 사각형 가능성 있음 |
+
+### 12. 테스트 전략
+
+| 레이어 | 도구 | 범위 |
+|---|---|---|
+| 단위 | — (Edge runtime 의존) | 해당 없음 |
+| 로컬 통합 | `npm run dev` + 브라우저 | `GET /result/{id}/opengraph-image` PNG 렌더 확인 |
+| 빌드 | `npm run build` + `npm run build:android` | 양쪽 모두 통과 |
+| Vercel preview | 배포 후 `view-source:/result/{id}` | `og:image` 메타 존재 확인 |
+| 실기기 E2E | 수동 | Android AAB → 카톡 공유 버튼 → Feed 썸네일 노출 |
+| 보너스 | 수동 | 카톡 대화방 URL 붙여넣기 자동 미리보기 |
+
+### 13. 롤백 계획
+
+문제가 발생할 경우 복구 절차:
+1. `lib/kakao.ts` 의 `imageWidth`/`imageHeight` 추가분만 되돌려도 기존 `/og-image.png` 정적 파일 fallback 으로 동작
+2. `generateMetadata` 제거 시 URL 붙여넣기 미리보기만 사라지고 Feed 공유는 정상
+3. `opengraph-image.tsx` 자체를 제거해도 카톡은 `imageUrl` 요청 실패 → 썸네일 미노출, 공유 플로우 자체는 진행됨
+
+즉 단계별 부분 롤백이 가능한 독립 모듈 구조.
+
+### 14. 확장 경로
+
+본 설계는 `result_id` 만 받으므로:
+- **Solo/Food/Group 자동 커버**: 동일 Edge route 로 모든 플로우의 결과 썸네일 생성
+- **디자인 개선**: `SHARE_CARD` 상수만 수정하면 전역 반영
+- **카드 종류 분기**: `method` 필드 기반으로 테마 변경 가능 (후속 이슈)
+
+### 15. Part 3 대비 변경점 요약
+
+| 항목 | Part 3 (롤백됨) | Part 4 (현행) |
+|---|---|---|
+| 렌더 위치 | 클라이언트 | Vercel Edge 서버 |
+| 라이브러리 | `html-to-image` (~30KB) | Next 16 `next/og` (내장, 클라이언트 영향 0) |
+| 비율 | 1080×1080 정사각형 | 1200×630 가로형 |
+| 공유 방식 | Share Sheet 파일 전송 | 카카오 Feed `imageUrl` 서버 URL |
+| 이모지 | OS system emoji | Twemoji 강제 |
+| 폰트 | 브라우저 시스템 | Pretendard woff2 번들 |
+| 미리보기 모달 | 있음 | 없음 (서버 렌더로 불필요) |
+| Android 빌드 | 문제 없음 | pageExtensions 분기 필요 (Edge runtime 비호환) |
+| Food/Group 확장 | 버튼 훅업 | `result_id` 기반으로 자동 커버 |
+
+이 설계로 Part 3 의 "카톡에 썸네일이 안 뜬다"는 한계가 해소되며, 1단계 배포 후 후속 이슈(HM-21-F/G)는 **실기기 QA 만으로 완료**된다.
 
