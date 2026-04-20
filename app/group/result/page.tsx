@@ -54,7 +54,6 @@ export default function GroupResultPage() {
   async function handleShare() {
     if (!result) return;
     await copyToClipboard(`${getAppBaseUrl()}/result/${result.id}`);
-    showToast('공유 링크가 복사됐어요! 📤');
   }
 
   async function handleKakaoShare() {

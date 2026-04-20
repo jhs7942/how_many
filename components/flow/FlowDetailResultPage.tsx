@@ -53,7 +53,6 @@ export default function FlowDetailResultPage({
       return;
     }
     await copyToClipboard(`${getAppBaseUrl()}/result/${detailResultId}`);
-    showToast('공유 링크가 복사됐어요!');
   };
 
   if (!parentActivity || !detail) return null;

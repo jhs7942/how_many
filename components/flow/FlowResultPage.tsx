@@ -64,7 +64,6 @@ export default function FlowResultPage({
       await Haptics.impact({ style: ImpactStyle.Light });
     } catch { /* 웹 환경 무시 */ }
     await copyToClipboard(`${getAppBaseUrl()}/result/${resultId}`);
-    showToast('공유 링크가 복사됐어요!');
   };
 
   const handleKakaoShare = async () => {
