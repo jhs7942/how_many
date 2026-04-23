@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { mulberry32 } from '@/lib/utils';
+import { useViewportWidth } from '@/lib/hooks/useViewportWidth';
 
 interface ContentShuffleProps {
   segments: { label: string; emoji: string }[];
@@ -115,8 +116,13 @@ export default function ContentShuffle({
     timersRef.current.push(t1, t2);
   }
 
+  const viewportW = useViewportWidth();
+  // PageLayout 좌우 padding 20px씩 + 안전 마진 8px → 실제 가용 폭
+  const availableW = Math.min(viewportW, 430) - 48;
   const gap = 12;
-  const CUP_W = Math.max(48, Math.min(72, Math.floor(360 / n) - 8));
+  // gap 제외 후 n개로 균등 분할, 상한 72·하한 36 (이모지 가독 최소)
+  const idealCupW = Math.floor((availableW - (n - 1) * gap) / n);
+  const CUP_W = Math.max(36, Math.min(72, idealCupW));
   const CUP_H = CUP_W * 1.2;
   const containerWidth = n * CUP_W + (n - 1) * gap;
   const LIFT_H = Math.ceil(CUP_H * 0.65); // 컵 들어올림 여백 (텍스트 겹침 방지)

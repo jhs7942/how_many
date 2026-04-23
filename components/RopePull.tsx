@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { mulberry32 } from '@/lib/utils';
+import { useViewportWidth } from '@/lib/hooks/useViewportWidth';
 
 interface RopePullProps {
   segments: { label: string; emoji: string }[];
@@ -111,10 +112,12 @@ export default function RopePull({
     }
   }
 
-  // 컬럼 너비 계산 (화면에 꽉 차도록)
+  // 컬럼 너비 계산 (실제 viewport 기반, foldable·소형 기기 대응)
+  const viewportW = useViewportWidth();
+  // PageLayout 좌우 padding 20px씩 + 안전 마진 8px → 실제 가용 폭
   const gap = 10;
-  const maxWidth = Math.min(380, 430 - 32);
-  const colW = Math.floor((maxWidth - (n - 1) * gap) / n);
+  const maxWidth = Math.min(viewportW, 430) - 48;
+  const colW = Math.max(36, Math.floor((maxWidth - (n - 1) * gap) / n));
   const containerWidth = n * colW + (n - 1) * gap;
 
   // 컨테이너 높이: 라벨박스 + 줄 + 손잡이 + 드래그 여유
