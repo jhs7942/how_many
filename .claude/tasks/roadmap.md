@@ -6,7 +6,7 @@ Linear 프로젝트: `몇명이니 v1.1 안정화`
 범위: Linear Team HM의 Todo 상태 이슈 5건을 우선순위 순으로 처리
 
 ## 진행 현황
-완료: 0/5 | 현재: 없음 | 검증 대기: Task 001, Task 002, Task 004
+완료: 0/5 | 현재: 없음 | 검증 대기: Task 001, Task 002, Task 004, Task 005 | BLOCKED: Task 003
 
 ### 이전 로드맵
 - `roadmap.hm-23.archive.md` — HM-23 (dev URL 분리) 완료 보관본
@@ -136,8 +136,9 @@ Linear 프로젝트: `몇명이니 v1.1 안정화`
 
 ---
 
-### Task 005: HM-18 결과 축하 연출 (컨페티)
-- 상태: TODO
+### Task 005: HM-18 결과 축하 연출 (컨페티) [CURRENT]
+- 상태: IN_REVIEW (코드 구현 완료, QA 재현 검증 대기)
+- 시작일: 2026-04-23
 - 예상 규모: Small (1 세션)
 - Linear 이슈: [HM-18](https://linear.app/wqeqw/issue/HM-18) (Low, Feature)
 - 의존성: 없음 (가장 나중 처리 권장 — 안정화 작업 완료 후 재미 요소 추가)
