@@ -11,10 +11,13 @@ user_name: 정현승
 
 sync_mode: enabled
 sync_target: linear
-current_issue_id: HM-24
-current_issue_identifier: HM-24
-last_sync_at: "2026-04-18T23:46Z"
+current_issue_id: null
+current_issue_identifier: null
+last_sync_at: "2026-04-24T00:00Z"
 last_pull_hash: null
+
+# 2026-04-23 세션: HM-27/28/20/18 구현 완료 → In Review 전이
+# HM-29 BLOCKED (기획자 합의 대기: 1차 후보 축소 vs 대분류 신설 vs SpinWheel 렌더 개선)
 
 state_map:
   ideate: { id: "0f4a2d7c-6927-4198-8c34-7e19612d629a", name: "Backlog", type: "backlog" }
