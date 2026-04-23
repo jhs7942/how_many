@@ -18,6 +18,13 @@ const PEOPLE_OPTIONS = [
   { count: 6, emoji: '🎉' },
 ];
 
+const TIME_LIMIT_OPTIONS = [
+  { seconds: 60, label: '1분' },
+  { seconds: 180, label: '3분' },
+  { seconds: 300, label: '5분' },
+  { seconds: 600, label: '10분' },
+];
+
 const DEFAULT_CANDIDATES: Candidate[] = [
   { label: '보드게임', emoji: '🎲' },
   { label: '노래방', emoji: '🎤' },
@@ -32,6 +39,7 @@ export default function GroupCreatePage() {
   const [selectedPeople, setSelectedPeople] = useState<number | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>(DEFAULT_CANDIDATES);
   const [location, setLocation] = useState('');
+  const [timeLimit, setTimeLimit] = useState(300);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -84,6 +92,7 @@ export default function GroupCreatePage() {
         peopleCount: selectedPeople ?? undefined,
         location: location.trim() || undefined,
         candidates,
+        timeLimit: mode === 'vote' ? timeLimit : undefined,
       });
       session.set('roomId', room.id);
       session.set('roomCode', room.code);
@@ -178,6 +187,36 @@ export default function GroupCreatePage() {
           </p>
           <CandidateEditor candidates={candidates} onChange={setCandidates} maxCount={MAX_COUNT} />
         </div>
+
+        {/* 투표 제한 시간 (vote 모드만) */}
+        {mode === 'vote' && (
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 700, color: '#888', marginBottom: 10 }}>
+              투표 제한 시간
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {TIME_LIMIT_OPTIONS.map(({ seconds, label }) => (
+                <button
+                  key={seconds}
+                  onClick={() => setTimeLimit(seconds)}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: 10,
+                    background: timeLimit === seconds ? 'var(--color-accent)' : '#fff',
+                    border: `2px solid ${timeLimit === seconds ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                    fontWeight: 700,
+                    fontSize: 14,
+                    cursor: 'pointer',
+                    color: 'var(--color-text)',
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* 위치 (선택) */}
         <div>

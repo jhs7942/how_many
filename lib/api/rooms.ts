@@ -9,6 +9,7 @@ interface CreateRoomParams {
   peopleCount?: number;
   location?: string;
   candidates: { label: string; emoji: string }[];
+  timeLimit?: number; // 투표 제한 시간 (초). 미지정 시 기본 5분(300)
 }
 
 export async function createRoom(
@@ -27,6 +28,7 @@ export async function createRoom(
       preset: params.preset,
       people_count: params.peopleCount ?? null,
       location: params.location ?? null,
+      time_limit: params.timeLimit ?? 300,
     })
     .select()
     .single();
