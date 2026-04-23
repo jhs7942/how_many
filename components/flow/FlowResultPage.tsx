@@ -6,6 +6,7 @@ import BackButton from '@/components/BackButton';
 import MapButton from '@/components/MapButton';
 import PageLayout from '@/components/PageLayout';
 import Toast, { useToast } from '@/components/Toast';
+import ConfettiBurst from '@/components/ConfettiBurst';
 import { session } from '@/lib/session';
 import { copyToClipboard, getAppBaseUrl } from '@/lib/utils';
 import { sendKakaoMessage } from '@/lib/kakao';
@@ -88,6 +89,7 @@ export default function FlowResultPage({
 
   return (
     <PageLayout>
+      <ConfettiBurst />
       <div style={{ display: 'flex', alignItems: 'center', padding: '16px 0', gap: 12, minHeight: 56 }}>
         <BackButton href={backHref} />
       </div>

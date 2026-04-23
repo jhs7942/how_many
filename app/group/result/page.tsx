@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PageLayout from '@/components/PageLayout';
 import Toast, { useToast } from '@/components/Toast';
+import ConfettiBurst from '@/components/ConfettiBurst';
 import { session } from '@/lib/session';
 import { copyToClipboard, getAppBaseUrl, openMap } from '@/lib/utils';
 import { sendKakaoMessage } from '@/lib/kakao';
@@ -110,6 +111,7 @@ export default function GroupResultPage() {
 
   return (
     <PageLayout>
+      <ConfettiBurst />
       <div style={{ paddingTop: 16 }}>
         <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>
           🎉 {result.method === 'vote' ? '투표 결과' : '랜덤 결과'}
