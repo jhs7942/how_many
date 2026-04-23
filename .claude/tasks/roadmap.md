@@ -6,7 +6,7 @@ Linear 프로젝트: `몇명이니 v1.1 안정화`
 범위: Linear Team HM의 Todo 상태 이슈 5건을 우선순위 순으로 처리
 
 ## 진행 현황
-완료: 0/5 | 현재: Task 001 (IN_PROGRESS)
+완료: 0/5 | 현재: 없음 | 검증 대기: Task 001, Task 002
 
 ### 이전 로드맵
 - `roadmap.hm-23.archive.md` — HM-23 (dev URL 분리) 완료 보관본
@@ -23,9 +23,11 @@ Linear 프로젝트: `몇명이니 v1.1 안정화`
 
 ## 태스크 목록
 
-### Task 001: HM-27 투표 타이머 초기값 동기화 수정 [CURRENT]
-- 상태: IN_PROGRESS
+### Task 001: HM-27 투표 타이머 초기값 동기화 수정
+- 상태: IN_REVIEW (코드 구현·develop 푸시 완료, QA 재현 검증 대기)
 - 시작일: 2026-04-23
+- 구현 커밋: `3a91c38`
+- 배포: develop → Vercel preview URL 자동 배포
 - 예상 규모: Small (1 세션)
 - Linear 이슈: [HM-27](https://linear.app/wqeqw/issue/HM-27) (High, Bug)
 - 의존성: 없음
@@ -52,8 +54,10 @@ Linear 프로젝트: `몇명이니 v1.1 안정화`
 
 ---
 
-### Task 002: HM-28 ContentShuffle/RopePull 반응형 레이아웃 수정
-- 상태: TODO
+### Task 002: HM-28 ContentShuffle/RopePull 반응형 레이아웃 수정 [CURRENT]
+- 상태: IN_REVIEW (코드 구현 완료, develop 커밋 `00a2efe`, QA 재현 검증 대기)
+- 시작일: 2026-04-23
+- 구현 커밋: `00a2efe`
 - 예상 규모: Small-Medium (1 세션)
 - Linear 이슈: [HM-28](https://linear.app/wqeqw/issue/HM-28) (High, Bug)
 - 의존성: 없음 (Task 001과 독립 병렬 가능)
