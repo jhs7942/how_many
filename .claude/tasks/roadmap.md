@@ -6,7 +6,7 @@ Linear 프로젝트: `몇명이니 v1.1 안정화`
 범위: Linear Team HM의 Todo 상태 이슈 5건을 우선순위 순으로 처리
 
 ## 진행 현황
-완료: 0/5 | 현재: 없음 | 검증 대기: Task 001, Task 002
+완료: 0/5 | 현재: 없음 | 검증 대기: Task 001, Task 002, Task 004
 
 ### 이전 로드맵
 - `roadmap.hm-23.archive.md` — HM-23 (dev URL 분리) 완료 보관본
@@ -112,8 +112,9 @@ Linear 프로젝트: `몇명이니 v1.1 안정화`
 
 ---
 
-### Task 004: HM-20 Group 투표 시간 커스텀 UI 추가
-- 상태: TODO
+### Task 004: HM-20 Group 투표 시간 커스텀 UI 추가 [CURRENT]
+- 상태: IN_REVIEW (코드 구현 완료, QA 재현 검증 대기)
+- 시작일: 2026-04-23
 - 예상 규모: Small (1 세션)
 - Linear 이슈: [HM-20](https://linear.app/wqeqw/issue/HM-20) (Low, Feature)
 - 의존성: Task 001 (useVoteTimer 안정화 이후 진행 권장 — 타이머 로직에 손대는 작업 연쇄 방지)
