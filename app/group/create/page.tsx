@@ -56,7 +56,7 @@ export default function GroupCreatePage() {
     }
   }, [preset, selectedPeople]);
 
-  const MAX_COUNT = 8;
+  const MAX_COUNT = 7;
 
   // 인원기반: 해당 인원 활동 / 직접입력: 전체 활동
   const presetActivities =

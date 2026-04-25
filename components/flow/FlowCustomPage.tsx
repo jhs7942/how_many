@@ -9,7 +9,7 @@ import ActivityPresetPicker from '@/components/ActivityPresetPicker';
 import { session } from '@/lib/session';
 import type { ActivityItem } from '@/lib/data';
 
-const MAX_COUNT = 8;
+const MAX_COUNT = 7;
 
 interface FlowCustomPageProps {
   presets: ActivityItem[];

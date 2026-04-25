@@ -14,6 +14,18 @@ export function generateRoomCode(): string {
   return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 
+// 배열에서 n개 항목을 무작위 추출 (Fisher-Yates 셔플 후 잘라내기)
+// 풍부한 데이터 풀에서 화면 노출용 일부만 sampling — HM-31 콘텐츠 7개 정책 대응
+export function sampleN<T>(arr: T[], n: number): T[] {
+  if (arr.length <= n) return [...arr];
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, n);
+}
+
 // 게임 타입 선택 (후보 수에 따라 확률 분기)
 export function pickGameType(count: number): 'spin' | 'shuffle' | 'slot' | 'rope' {
   const r = Math.random();

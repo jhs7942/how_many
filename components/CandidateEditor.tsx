@@ -19,7 +19,7 @@ const DEFAULT_EMOJIS = ['🍕', '🎬', '🎮', '🏃', '🎵', '☕', '🍻', '
 export default function CandidateEditor({
   candidates,
   onChange,
-  maxCount = 8,
+  maxCount = 7,
   emojiSet,
 }: CandidateEditorProps) {
   const [input, setInput] = useState('');

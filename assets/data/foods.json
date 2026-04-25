@@ -3,12 +3,7 @@
   {"label": "중식", "emoji": "🥟"},
   {"label": "일식", "emoji": "🍣"},
   {"label": "양식", "emoji": "🍝"},
-  {"label": "분식", "emoji": "🍢"},
-  {"label": "치킨", "emoji": "🍗"},
-  {"label": "피자", "emoji": "🍕"},
-  {"label": "햄버거", "emoji": "🍔"},
-  {"label": "카페", "emoji": "☕"},
-  {"label": "디저트", "emoji": "🍰"},
   {"label": "동남아", "emoji": "🍜"},
-  {"label": "멕시칸", "emoji": "🌮"}
+  {"label": "멕시칸", "emoji": "🌮"},
+  {"label": "간편식", "emoji": "🍔"}
 ]

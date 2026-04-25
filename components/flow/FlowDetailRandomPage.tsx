@@ -10,7 +10,7 @@ import SlotMachine from '@/components/SlotMachine';
 import RopePull from '@/components/RopePull';
 import { session } from '@/lib/session';
 import { saveResult } from '@/lib/api/results';
-import { pickGameType } from '@/lib/utils';
+import { pickGameType, sampleN } from '@/lib/utils';
 import type { ActivityItem } from '@/lib/data';
 
 interface FlowDetailSessionKeys {
@@ -61,12 +61,14 @@ export default function FlowDetailRandomPage({
     }
     setParentActivity(saved);
 
-    const items = dataMap[saved.label] ?? fallbackSegments ?? [
+    const rawItems = dataMap[saved.label] ?? fallbackSegments ?? [
       { label: '근처 맛집', emoji: '🍽️' },
       { label: '핫플레이스', emoji: '🔥' },
       { label: '조용한 곳', emoji: '🌿' },
       { label: '새로운 곳', emoji: '✨' },
     ];
+    // 데이터 풀이 7개를 초과하면 랜덤 7개만 노출 (HM-31 콘텐츠 7개 정책 + 매번 다른 조합)
+    const items = sampleN(rawItems, 7);
     setSegments(items);
     setGameType(pickGameType(items.length));
   }, [dataMap, sessionKeys.parentActivity, fallbackSegments, fallbackHref, router]);
