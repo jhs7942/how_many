@@ -219,7 +219,7 @@ export default function RopePull({
                 }}
               />
 
-              {/* 손잡이 — marginTop -6으로 줄과 자연 연결 (4px 폭 → 44px round 폭 차이로 인한 시각 갭 제거) */}
+              {/* 손잡이 — 줄 height 변화에 자연 동행. transform 제거하여 줄 끝과 끊김 없이 따라감 (marginTop -6으로 시각 갭 제거) */}
               <div
                 onPointerDown={(e) => onHandleDown(i, e)}
                 onPointerMove={(e) => onHandleMove(i, e)}
@@ -240,10 +240,7 @@ export default function RopePull({
                   justifyContent: 'center',
                   fontSize: 20,
                   boxShadow: isDragged ? 'var(--shadow-lg)' : 'var(--shadow)',
-                  transform: `translateY(${dragOffset}px)`,
-                  transition: dragOffset === 0 && !isDragged
-                    ? 'transform 0.35s cubic-bezier(.4,2,.6,1), background 0.2s'
-                    : 'background 0.2s',
+                  transition: 'background 0.2s',
                   touchAction: 'none',
                   margin: '-6px auto 0',
                 }}
