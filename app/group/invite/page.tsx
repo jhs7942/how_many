@@ -27,7 +27,6 @@ export default function GroupInvitePage() {
 
   const handleCopyCode = async () => {
     await copyToClipboard(roomCode);
-    showToast('방 코드가 복사되었어요! 📋');
   };
 
   const handleCopyLink = async () => {
@@ -152,7 +151,7 @@ export default function GroupInvitePage() {
               border: '2px solid var(--color-primary)',
             }}
           >
-            🔗 초대 링크 복사
+            🔗 친구 초대하기
           </button>
           <button
             onClick={handleCopyAll}

@@ -186,7 +186,7 @@ export default function FlowResultPage({
                 boxShadow: 'var(--shadow-lg)',
               }}
             >
-              링크 복사 📤
+              결과 공유하기 📤
             </button>
             <button
               data-testid="btn-kakao-share"

@@ -119,7 +119,6 @@ export default function GroupLobbyPage() {
 
   async function handleCopyCode() {
     await copyToClipboard(roomCode);
-    showToast(`코드 ${roomCode} 복사됨! 📋`);
   }
 
   return (

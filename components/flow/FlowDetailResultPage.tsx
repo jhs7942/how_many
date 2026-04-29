@@ -142,7 +142,7 @@ export default function FlowDetailResultPage({
               boxShadow: '0 4px 16px rgba(255,122,61,0.35)',
             }}
           >
-            링크 복사 📤
+            결과 공유하기 📤
           </button>
           <button
             onClick={() => router.push(retryHref)}
