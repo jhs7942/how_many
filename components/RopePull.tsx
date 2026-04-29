@@ -218,7 +218,7 @@ export default function RopePull({
                 }}
               />
 
-              {/* 손잡이 */}
+              {/* 손잡이 — marginTop -6으로 줄과 자연 연결 (4px 폭 → 44px round 폭 차이로 인한 시각 갭 제거) */}
               <div
                 onPointerDown={(e) => onHandleDown(i, e)}
                 onPointerMove={(e) => onHandleMove(i, e)}
@@ -244,7 +244,7 @@ export default function RopePull({
                     ? 'transform 0.35s cubic-bezier(.4,2,.6,1), background 0.2s'
                     : 'background 0.2s',
                   touchAction: 'none',
-                  margin: '0 auto',
+                  margin: '-6px auto 0',
                 }}
               >
                 🪢

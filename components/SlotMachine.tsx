@@ -43,12 +43,14 @@ export default function SlotMachine({
   const reelOffsetsRef = useRef(reelOffsets);
   useEffect(() => { reelOffsetsRef.current = reelOffsets; }, [reelOffsets]);
   const nearMissTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const pullDownTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     return () => {
       cancelledRef.current = true;
       rafIds.current.forEach(cancelAnimationFrame);
       clearTimeout(nearMissTimerRef.current);
+      clearTimeout(pullDownTimerRef.current);
     };
   }, []);
 
@@ -211,7 +213,12 @@ export default function SlotMachine({
     const delta = Math.max(0, Math.min(e.clientY - pointerStartY.current, MAX_PULL));
 
     if (delta >= TRIGGER_THRESHOLD) {
-      startSpin();
+      // 레버를 MAX_PULL까지 끝까지 끌어내려 시각 피드백 → transition(350ms) 완료 후 스핀 시작
+      setLeverDelta(MAX_PULL);
+      pullDownTimerRef.current = setTimeout(() => {
+        if (cancelledRef.current) return;
+        startSpin();
+      }, 380);
     } else {
       setLeverDelta(0);
       setGameState('idle');
