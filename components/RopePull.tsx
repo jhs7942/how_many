@@ -37,6 +37,7 @@ export default function RopePull({
   const cancelledRef = useRef(false);
 
   useEffect(() => {
+    cancelledRef.current = false;  // StrictMode/HMR cleanup 후 재mount 시 ref 초기화 보장
     return () => {
       cancelledRef.current = true;
       timers.current.forEach(clearTimeout);

@@ -16,8 +16,9 @@ const REEL_H = 216;        // 가시 영역 높이 (ITEM_H × 3)
 const ITEM_H = 72;         // 릴 아이템 1개 높이
 const REPEAT = 14;         // 릴 아이템 반복 횟수 (충분한 스크롤 확보)
 const CENTER_OFFSET = REEL_H / 2 - ITEM_H / 2;  // 아이템 센터 정렬 오프셋 (72px)
-const MAX_PULL = 80;       // 레버 최대 드래그 거리
+const MAX_PULL = 80;       // 레버 드래그 중 손잡이 이동 한계
 const TRIGGER_THRESHOLD = 48;  // 스핀 트리거 임계값 (MAX_PULL × 0.6)
+const PULL_DOWN_DEPTH = 188;   // release 후 받침대 직전까지 끌어내리는 시각 깊이 (기둥 끝)
 const REEL_DURATION = 2600;    // 릴 0 애니메이션 시간 (ms)
 const REEL_STAGGER = 700;      // 릴 간 정지 딜레이 (ms)
 
@@ -46,6 +47,7 @@ export default function SlotMachine({
   const pullDownTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
+    cancelledRef.current = false;  // StrictMode/HMR cleanup 후 재mount 시 ref 초기화 보장
     return () => {
       cancelledRef.current = true;
       rafIds.current.forEach(cancelAnimationFrame);
@@ -213,8 +215,8 @@ export default function SlotMachine({
     const delta = Math.max(0, Math.min(e.clientY - pointerStartY.current, MAX_PULL));
 
     if (delta >= TRIGGER_THRESHOLD) {
-      // 레버를 MAX_PULL까지 끝까지 끌어내려 시각 피드백 → transition(350ms) 완료 후 스핀 시작
-      setLeverDelta(MAX_PULL);
+      // 레버를 받침대 직전까지 끝까지 끌어내려 시각 피드백 → transition 완료 후 스핀 시작
+      setLeverDelta(PULL_DOWN_DEPTH);
       pullDownTimerRef.current = setTimeout(() => {
         if (cancelledRef.current) return;
         startSpin();
